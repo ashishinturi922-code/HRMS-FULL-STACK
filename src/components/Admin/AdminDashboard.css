@@ -1,0 +1,228 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* MAIN CONTAINER */
+.admin-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: #111827;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: 0.3s;
+}
+
+.logo-container {
+  text-align: center;
+  padding: 20px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.logo-container img {
+  width: 120px;
+  border-radius: 10px;
+}
+
+/* MENU */
+.sidebar ul {
+  list-style: none;
+  padding: 10px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar ul li {
+  padding: 14px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.sidebar ul li:hover {
+  background: #1f2937;
+}
+
+.sidebar ul li.active {
+  background: #2563eb;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+/* TOPBAR */
+.topbar {
+  height: 70px;
+  background: #fff;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.topbar h3 {
+  font-size: 16px;
+  color: #111827;
+}
+
+/* RIGHT SECTION */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* PROFILE IMAGE */
+.topbar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.topbar-avatar {
+  width: 40px;
+  height: 40px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.topbar-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+/* PAGE CONTENT */
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ========================= */
+/* 📱 RESPONSIVE DESIGN */
+/* ========================= */
+
+/* TABLET */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .sidebar ul li {
+    font-size: 14px;
+    padding: 12px 15px;
+  }
+
+  .topbar h3 {
+    font-size: 14px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .admin-container {
+    flex-direction: column;
+  }
+
+  /* SIDEBAR TOP NAV */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .logo-container {
+    display: none;
+  }
+
+  .sidebar ul {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .sidebar ul li {
+    flex: 1;
+    justify-content: center;
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .sidebar ul li span {
+    display: none;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .topbar-right {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .content {
+    padding: 10px;
+  }
+}
+
+/* SMALL MOBILE */
+@media (max-width: 480px) {
+  .topbar h3 {
+    font-size: 12px;
+  }
+
+  .logout-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .topbar-name {
+    font-size: 12px;
+  }
+}

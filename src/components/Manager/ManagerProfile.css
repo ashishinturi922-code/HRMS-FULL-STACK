@@ -1,0 +1,219 @@
+/* ===== PAGE ===== */
+.profile-page {
+  padding: 20px;
+  background: #f4f6fb;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== HEADER ===== */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.profile-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ===== PROFILE IMAGE ===== */
+.profile-img-wrapper {
+  position: relative;
+}
+
+.profile-img-wrapper img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3b82f6;
+}
+
+.profile-img-wrapper input {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+/* ===== USER NAME ===== */
+.profile-left h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.profile-left p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+/* ===== EDIT BUTTON ===== */
+.edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.edit-btn:hover {
+  background: #2563eb;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #e2e8f0;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.tabs button:hover {
+  background: #cbd5f5;
+}
+
+.tabs .active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* ===== TAB CONTENT ===== */
+.tab-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+/* ===== FORM GRID ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+/* ===== FORM GROUP ===== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #475569;
+}
+
+/* ===== INPUTS ===== */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+
+.form-group textarea {
+  resize: none;
+  min-height: 80px;
+}
+
+/* ===== DOCUMENT SECTION ===== */
+.form-group input[type="file"] {
+  padding: 5px;
+  border: none;
+}
+
+.form-group p {
+  font-size: 12px;
+  color: #16a34a;
+  margin-top: 5px;
+}
+
+/* ===== SECURITY BOX ===== */
+.security-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+}
+
+.security-box input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+.security-box input:focus {
+  border-color: #3b82f6;
+}
+
+/* ===== UPDATE BUTTON ===== */
+.update-btn {
+  padding: 10px;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.update-btn:hover {
+  background: #16a34a;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+}

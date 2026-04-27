@@ -1,0 +1,383 @@
+/* ===== PAGE CONTAINER ===== */
+.dept-container {
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f4f7fb 0%, #e9ecef 100%);
+  min-height: 100vh;
+}
+
+/* ===== TITLE ===== */
+.dept-container h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #1e293b;
+  letter-spacing: -0.5px;
+}
+
+/* ===== ADD SECTION ===== */
+.dept-add {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 30px;
+  max-width: 600px;
+  animation: slideIn 0.4s ease-in-out;
+}
+
+/* ===== INPUT FIELD ===== */
+.dept-add input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  font-size: 14px;
+  color: #1e293b;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.dept-add input::placeholder {
+  color: #94a3b8;
+}
+
+.dept-add input:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #fafbff;
+}
+
+.dept-add input:hover:not(:focus) {
+  border-color: #cbd5e1;
+}
+
+/* ===== ADD BUTTON ===== */
+.dept-add button {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dept-add button:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+}
+
+.dept-add button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.dept-add button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== DEPARTMENT LIST ===== */
+.dept-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+}
+
+/* ===== DEPARTMENT ITEM ===== */
+.dept-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.dept-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+/* ===== DEPARTMENT NAME ===== */
+.dept-item span {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  word-break: break-word;
+}
+
+/* ===== DELETE BUTTON ===== */
+.dept-item button {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.dept-item button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.dept-item button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+/* ===== EMPTY STATE ===== */
+.dept-list:empty + .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
+  display: none;
+}
+
+.dept-list:empty ~ .empty-state {
+  display: block;
+}
+
+/* Alternative empty state styling */
+.dept-item:nth-child(0) {
+  display: none;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .dept-container {
+    padding: 20px;
+  }
+
+  .dept-container h2 {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .dept-add {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .dept-add input {
+    padding: 11px 14px;
+    font-size: 13px;
+  }
+
+  .dept-add button {
+    padding: 11px 24px;
+    font-size: 13px;
+  }
+
+  .dept-item {
+    padding: 14px 16px;
+  }
+
+  .dept-item span {
+    font-size: 14px;
+  }
+
+  .dept-item button {
+    padding: 7px 14px;
+    font-size: 12px;
+    margin-left: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dept-container {
+    padding: 16px;
+  }
+
+  .dept-container h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .dept-add {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-width: 100%;
+  }
+
+  .dept-add input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .dept-add button {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .dept-list {
+    max-width: 100%;
+    gap: 10px;
+  }
+
+  .dept-item {
+    flex-direction: row;
+    padding: 14px 14px;
+    gap: 10px;
+  }
+
+  .dept-item span {
+    font-size: 13px;
+    min-width: 0;
+  }
+
+  .dept-item button {
+    padding: 7px 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .empty-state {
+    padding: 50px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dept-container {
+    padding: 12px;
+  }
+
+  .dept-container h2 {
+    font-size: 18px;
+    margin-bottom: 18px;
+  }
+
+  .dept-add {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dept-add input {
+    padding: 11px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .dept-add input::placeholder {
+    font-size: 12px;
+  }
+
+  .dept-add button {
+    padding: 11px 16px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .dept-list {
+    gap: 8px;
+  }
+
+  .dept-item {
+    padding: 12px 12px;
+    border-radius: 10px;
+  }
+
+  .dept-item span {
+    font-size: 13px;
+  }
+
+  .dept-item button {
+    padding: 6px 10px;
+    font-size: 11px;
+    margin-left: 6px;
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .dept-container {
+    padding: 10px;
+  }
+
+  .dept-container h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .dept-add input {
+    font-size: 12px;
+    padding: 10px 10px;
+  }
+
+  .dept-add button {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .dept-item span {
+    font-size: 12px;
+  }
+
+  .dept-item button {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}

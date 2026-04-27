@@ -1,0 +1,87 @@
+.projects-container {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6fb;
+  min-height: 100vh;
+}
+
+.projects-container h2 {
+  margin-bottom: 20px;
+}
+
+/* SEARCH */
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* CARD */
+.projects-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* TABLE */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-table thead {
+  background: #1e293b;
+  color: white;
+}
+
+.projects-table th,
+.projects-table td {
+  padding: 12px;
+}
+
+.projects-table tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.projects-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+/* STATUS */
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+}
+
+.status.ongoing {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.status.completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* ACTION DROPDOWN */
+.projects-table select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.projects-table select:hover {
+  border-color: #2563eb;
+}

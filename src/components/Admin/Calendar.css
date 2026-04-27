@@ -1,0 +1,612 @@
+/* ===== MAIN CONTAINER ===== */
+.calendar-container {
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f7fb;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.calendar-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* ===== NAV BUTTONS ===== */
+.nav-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btns button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+}
+
+.nav-btns button:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+}
+
+.nav-btns button:active {
+  transform: translateY(0);
+}
+
+/* ===== DAYS HEADER (SUN-SAT) ===== */
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 15px;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-days div {
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* ===== CALENDAR GRID ===== */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+/* ===== CALENDAR CELL ===== */
+.calendar-cell {
+  min-height: 120px;
+  padding: 12px;
+  border-radius: 12px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-cell:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #4f46e5;
+}
+
+/* TODAY */
+.calendar-cell.today {
+  border: 2px solid #4f46e5;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
+}
+
+.calendar-cell.today .date {
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+/* WEEKEND */
+.calendar-cell.weekend {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(203, 213, 225, 0.05) 100%);
+}
+
+/* EMPTY CELL */
+.calendar-cell.empty {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* DATE NUMBER */
+.date {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #1e293b;
+  line-height: 1;
+}
+
+/* EVENT DOTS */
+.event-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-dot {
+  font-size: 11px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInOverlay 0.3s ease-in-out;
+  backdrop-filter: blur(4px);
+}
+
+/* ===== MODAL BOX ===== */
+.modal-box {
+  width: 100%;
+  max-width: 450px;
+  padding: 28px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-in-out;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* MODAL TITLE */
+.modal-box h3 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* MODAL DATE */
+.modal-date {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* ===== FORM INPUTS ===== */
+.modal-box input,
+.modal-box textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+}
+
+.modal-box input:focus,
+.modal-box textarea:focus {
+  border-color: #4f46e5;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.modal-box textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ===== TIME ROW ===== */
+.time-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.time-row input {
+  flex: 1;
+}
+
+/* ===== MODAL ACTIONS ===== */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.modal-actions .save {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+}
+
+.modal-actions .save:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+.modal-actions .save:active {
+  transform: translateY(0);
+}
+
+.modal-actions .cancel {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+}
+
+.modal-actions .cancel:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+}
+
+.modal-actions .cancel:active {
+  transform: translateY(0);
+}
+
+/* ===== EVENT LIST ===== */
+.modal-event-list {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.event-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.event-info strong {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.event-info p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ===== EVENT BUTTONS ===== */
+.event-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.event-btns button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+.modal-box::-webkit-scrollbar,
+.modal-event-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-box::-webkit-scrollbar-track,
+.modal-event-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.modal-box::-webkit-scrollbar-thumb,
+.modal-event-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.modal-box::-webkit-scrollbar-thumb:hover,
+.modal-event-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .calendar-container {
+    padding: 16px;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .calendar-header h2 {
+    font-size: 24px;
+  }
+
+  .calendar-cell {
+    min-height: 100px;
+    padding: 10px;
+  }
+
+  .date {
+    font-size: 14px;
+  }
+
+  .event-dot {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 12px;
+  }
+
+  .calendar-header h2 {
+    font-size: 20px;
+  }
+
+  .nav-btns button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .calendar-cell {
+    min-height: 80px;
+    padding: 8px;
+  }
+
+  .date {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .event-dot {
+    font-size: 9px;
+    padding: 2px 4px;
+  }
+
+  .modal-box {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .modal-box h3 {
+    font-size: 18px;
+  }
+
+  .modal-box input,
+  .modal-box textarea {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .modal-actions button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .event-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .event-btns {
+    width: 100%;
+    gap: 4px;
+  }
+
+  .event-btns button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-container {
+    padding: 8px;
+  }
+
+  .calendar-header h2 {
+    font-size: 18px;
+  }
+
+  .nav-btns {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-btns button {
+    padding: 6px 10px;
+    font-size: 12px;
+    flex: 1;
+  }
+
+  .calendar-days {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .calendar-days div {
+    font-size: 11px;
+    padding: 6px 2px;
+  }
+
+  .calendar-grid {
+    gap: 6px;
+  }
+
+  .calendar-cell {
+    min-height: 70px;
+    padding: 6px;
+  }
+
+  .date {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .event-dot {
+    font-size: 8px;
+    padding: 2px 3px;
+  }
+
+  .modal-box {
+    max-width: 95%;
+    padding: 16px;
+  }
+
+  .modal-box h3 {
+    font-size: 16px;
+  }
+
+  .modal-box input,
+  .modal-box textarea {
+    padding: 8px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .time-row {
+    gap: 8px;
+  }
+
+  .modal-actions {
+    gap: 8px;
+  }
+
+  .modal-actions button {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .event-item {
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+
+  .event-info strong {
+    font-size: 12px;
+  }
+
+  .event-info p {
+    font-size: 11px;
+  }
+
+  .event-btns button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}

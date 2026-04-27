@@ -1,0 +1,40 @@
+.emp-container {
+  padding: 20px;
+  background-color: #f5f6fa;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Topbar */
+.emp-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.emp-topbar h2 {
+  font-weight: 600;
+}
+
+/* Logout Button */
+.logout-btn {
+  padding: 8px 15px;
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #c62828;
+}
+
+/* Welcome Card */
+.emp-card {
+  background-color: #e0e0e0;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 16px;
+}

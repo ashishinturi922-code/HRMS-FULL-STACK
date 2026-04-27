@@ -1,0 +1,135 @@
+/* PAGE CONTAINER */
+.page-container {
+  padding: 30px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+/* TITLE */
+.page-container h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* HEADER */
+thead {
+  background: #f1f5f9;
+}
+
+th {
+  padding: 14px;
+  font-size: 13px;
+  text-align: left;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+/* BODY */
+td {
+  padding: 16px 14px;
+  font-size: 14px;
+  color: #1e293b;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ROW HOVER */
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* STATUS */
+td:nth-child(5) {
+  font-weight: 600;
+}
+
+/* STATUS COLORS */
+td:nth-child(5):contains("Approved") {
+  color: #16a34a;
+}
+
+td:nth-child(5):contains("Denied") {
+  color: #dc2626;
+}
+
+td:nth-child(5):contains("Pending") {
+  color: #f59e0b;
+}
+
+/* BUTTONS */
+button {
+  padding: 6px 12px;
+  margin-right: 6px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* APPROVE BUTTON */
+button:first-child {
+  background: #22c55e;
+  color: white;
+}
+
+button:first-child:hover {
+  background: #16a34a;
+}
+
+/* REJECT BUTTON */
+button:last-child {
+  background: #ef4444;
+  color: white;
+}
+
+button:last-child:hover {
+  background: #dc2626;
+}
+
+/* INPUT (REJECTION REASON) */
+input {
+  padding: 6px 10px;
+  margin-right: 6px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+/* EMPTY STATE */
+td[colspan] {
+  text-align: center;
+  padding: 30px;
+  color: #64748b;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 10px;
+  }
+
+  button {
+    margin-top: 5px;
+  }
+}

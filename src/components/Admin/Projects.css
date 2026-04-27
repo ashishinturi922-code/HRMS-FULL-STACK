@@ -1,0 +1,479 @@
+/* ===== CSS VARIABLES ===== */
+:root {
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-dark: #1e293b;
+  --color-light: #f4f6fb;
+  --color-white: #ffffff;
+  --color-gray: #64748b;
+  --color-gray-light: #e5e7eb;
+  --color-gray-lighter: #eee;
+  --color-border: #ddd;
+  --color-bg-hover: #f9fafb;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.05);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --transition: 0.3s;
+}
+
+/* ===== GLOBAL STYLES ===== */
+* {
+  box-sizing: border-box;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.projects-container {
+  padding: 20px;
+  background: var(--color-light);
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== HEADER ===== */
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.projects-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+/* ===== BUTTONS - REUSABLE ===== */
+button {
+  font-family: inherit;
+}
+
+.create-btn {
+  background: var(--color-primary);
+  color: var(--color-white);
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transition: background var(--transition);
+  font-weight: 500;
+}
+
+.create-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ===== STATS CARDS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: var(--color-white);
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+  font-size: 28px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.stat-icon.ongoing {
+  color: var(--color-warning);
+}
+
+.stat-icon.completed {
+  color: var(--color-success);
+}
+
+.stat-card h4 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray);
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card p {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  gap: 10px;
+  flex: 1;
+  min-width: 250px;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-bar input::placeholder {
+  color: var(--color-gray);
+}
+
+.toolbar select {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 150px;
+  transition: border-color var(--transition);
+}
+
+.toolbar select:hover,
+.toolbar select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+/* ===== TABLE ===== */
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.projects-table th {
+  background: var(--color-dark);
+  color: var(--color-white);
+  padding: 14px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.projects-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-gray-lighter);
+  font-size: 14px;
+}
+
+.projects-table tbody tr:hover {
+  background: var(--color-bg-hover);
+}
+
+/* ===== STATUS BADGE ===== */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.ongoing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* ===== ACTIONS ===== */
+.actions {
+  text-align: center;
+}
+
+.actions button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 16px;
+  transition: color var(--transition), transform var(--transition);
+  color: var(--color-primary);
+}
+
+.actions button:hover {
+  transform: scale(1.15);
+}
+
+.complete-btn {
+  color: var(--color-success) !important;
+}
+
+.delete-btn {
+  color: var(--color-danger) !important;
+}
+
+/* ===== NO DATA MESSAGE ===== */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-gray);
+  font-size: 14px;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-box {
+  background: var(--color-white);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-box h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-dark);
+}
+
+/* ===== FORM ELEMENTS ===== */
+.modal-box input,
+.modal-box textarea,
+.modal-box select {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color var(--transition);
+}
+
+.modal-box input:focus,
+.modal-box textarea:focus,
+.modal-box select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.modal-box textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ===== MODAL ACTIONS ===== */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.primary-btn {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.primary-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+.secondary-btn {
+  background: var(--color-gray-light);
+  color: var(--color-dark);
+}
+
+.secondary-btn:hover {
+  background: #d1d5db;
+}
+
+/* ===== DETAILS CONTENT ===== */
+.details-content {
+  margin-bottom: 20px;
+}
+
+.details-content p {
+  margin: 10px 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.details-content b {
+  color: var(--color-dark);
+  font-weight: 600;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .projects-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-bar {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .toolbar select {
+    width: 100%;
+  }
+
+  .projects-table {
+    font-size: 12px;
+  }
+
+  .projects-table th,
+  .projects-table td {
+    padding: 10px 8px;
+  }
+
+  .modal-box {
+    max-width: 95%;
+    padding: 20px;
+  }
+
+  .create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .projects-container {
+    padding: 12px;
+  }
+
+  .projects-header h2 {
+    font-size: 18px;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    font-size: 24px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+
+  .projects-table th {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+}

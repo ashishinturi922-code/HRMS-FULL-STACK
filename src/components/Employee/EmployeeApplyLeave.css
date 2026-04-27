@@ -1,0 +1,220 @@
+/* PAGE CONTAINER */
+.leave-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* TITLE */
+.leave-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* ================= CALENDAR ================= */
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar-header button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.calendar-header button:hover {
+  background: #1e40af;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  color: #111;
+}
+
+/* DAYS */
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* GRID */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+/* CELL */
+.calendar-cell {
+  padding: 12px;
+  text-align: center;
+  background: #f3f4f6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.calendar-cell:hover {
+  background: #dbeafe;
+}
+
+/* EMPTY CELL */
+.empty {
+  background: transparent;
+}
+
+/* DISABLED DATE */
+.disabled-date {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ================= MODAL ================= */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-box h3 {
+  text-align: center;
+}
+
+/* INPUTS */
+.modal-box input,
+.modal-box select,
+.modal-box textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+}
+
+.modal-box textarea {
+  resize: none;
+  height: 70px;
+}
+
+/* ACTION BUTTONS */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal-actions button:first-child {
+  background: #9ca3af;
+  color: white;
+}
+
+.modal-actions button:last-child {
+  background: #22c55e;
+  color: white;
+}
+
+.modal-actions button:last-child:hover {
+  background: #16a34a;
+}
+
+/* ================= TABLE ================= */
+
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.leave-table th,
+.leave-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.leave-table th {
+  background: #2563eb;
+  color: white;
+}
+
+.leave-table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ================= STATUS COLORS ================= */
+
+.pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.approved {
+  color: green;
+  font-weight: bold;
+}
+
+.rejected {
+  color: red;
+  font-weight: bold;
+}
+
+/* ================= BUTTONS ================= */
+
+.leave-table button {
+  margin: 2px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* EDIT */
+.leave-table button:first-child {
+  background: #3b82f6;
+  color: white;
+}
+
+/* DELETE */
+.leave-table button:last-child {
+  background: #ef4444;
+  color: white;
+}
+
+.leave-table button:hover {
+  opacity: 0.85;
+}

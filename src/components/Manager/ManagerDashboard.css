@@ -1,0 +1,186 @@
+/* ===== GLOBAL ===== */
+.manager-container {
+  display: flex;
+  height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6fb;
+}
+
+/* ===== SIDEBAR (GLASS) ===== */
+.sidebar {
+  width: 240px;
+  backdrop-filter: blur(12px);
+  background: rgba(30, 41, 59, 0.9);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Logo */
+.logo-container {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.logo-container img {
+  width: 120px;
+  border-radius: 12px;
+}
+
+/* Menu */
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+/* Sidebar items */
+.sidebar ul li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  border-left: 4px solid transparent;
+  border-radius: 10px;
+  margin: 6px 10px;
+}
+
+/* Hover */
+.sidebar ul li:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateX(6px);
+}
+
+/* Active */
+.sidebar ul li.active {
+  background: rgba(255,255,255,0.25);
+  border-left: 4px solid #fff;
+  font-weight: 600;
+}
+
+/* ===== MAIN ===== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 15px;
+  padding: 14px 22px;
+  border-radius: 14px;
+
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.75);
+
+  border: 1px solid rgba(0,0,0,0.05);
+  color: #1e293b;
+}
+
+.topbar h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Right section */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Profile */
+.topbar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.topbar-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Username */
+.topbar-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Logout */
+.logout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+  transform: scale(1.08);
+}
+
+/* ===== CONTENT ===== */
+.content {
+  padding: 20px;
+  margin: 0 15px 15px;
+  border-radius: 14px;
+
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.65);
+
+  border: 1px solid rgba(0,0,0,0.05);
+  overflow-y: auto;
+
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* ===== CARDS ===== */
+.stat-card,
+.summary-card,
+.chart-card {
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.85);
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+/* Hover animation */
+.stat-card:hover,
+.summary-card:hover,
+.chart-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

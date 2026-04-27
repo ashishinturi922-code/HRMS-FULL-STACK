@@ -1,0 +1,46 @@
+/* ===== PAGE CONTAINER ===== */
+.page-container {
+  padding: 30px;
+  background: #f4f7fb;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== PAGE TITLE ===== */
+.page-container h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 25px;
+}
+
+/* ===== UNDER DEVELOPMENT BOX ===== */
+.under-dev {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  max-width: 500px;
+  margin: 0 auto;
+  transition: transform 0.3s ease;
+}
+
+/* Hover Effect */
+.under-dev:hover {
+  transform: translateY(-5px);
+}
+
+/* ===== ICON / TITLE ===== */
+.under-dev h3 {
+  font-size: 20px;
+  color: #ef4444;
+  margin-bottom: 10px;
+}
+
+/* ===== DESCRIPTION TEXT ===== */
+.under-dev p {
+  font-size: 15px;
+  color: #64748b;
+}

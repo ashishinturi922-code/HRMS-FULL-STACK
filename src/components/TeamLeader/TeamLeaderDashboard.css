@@ -1,0 +1,31 @@
+.page-container {
+  padding: 30px;
+  background: #f4f6fb;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.page-container h2 {
+  margin-bottom: 20px;
+  color: #1e293b;
+}
+
+/* Under Development Box */
+.under-dev {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.under-dev h3 {
+  font-size: 22px;
+  color: #ef4444;
+  margin-bottom: 10px;
+}
+
+.under-dev p {
+  color: #64748b;
+  font-size: 16px;
+}

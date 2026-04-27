@@ -1,0 +1,182 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* MAIN LAYOUT */
+.login-container {
+  display: flex;
+  height: 100vh;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* LEFT SECTION */
+.left-section {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* GLASS CARD */
+.overlay-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+
+  padding: 40px 30px;
+  border-radius: 20px;
+  width: 320px;
+
+  text-align: center;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* LOGO */
+.logo-img {
+  width: 170px;
+  margin-bottom: 15px;
+}
+
+/* COMPANY TEXT */
+.overlay-card p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+/* FEATURES */
+.features {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #333;
+}
+
+/* RIGHT SECTION */
+.right-section {
+  flex: 1;
+  background: #f7f9fc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* FORM */
+.login-form {
+  width: 380px;
+}
+
+/* TITLE */
+.login-form h2 {
+  font-size: 34px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+/* SUBTITLE */
+.subtitle {
+  font-size: 15px;
+  color: #777;
+  margin-bottom: 30px;
+}
+
+/* LABEL */
+.login-form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* INPUT GROUP */
+.input-group {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+/* INPUT */
+.input-group input {
+  width: 100%;
+  height: 50px;
+  padding: 0 45px;
+
+  border-radius: 12px;
+  border: 1px solid #e0e4ec;
+
+  background: #f1f4f9;
+  font-size: 14px;
+
+  transition: all 0.25s ease;
+}
+
+/* INPUT FOCUS */
+.input-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ICON LEFT */
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9aa4b2;
+  font-size: 14px;
+}
+
+/* EYE ICON */
+.eye-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #9aa4b2;
+}
+
+/* BUTTON */
+.login-form button {
+  width: 100%;
+  height: 52px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #fff;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* BUTTON HOVER */
+.login-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+}
+
+/* ERROR */
+.error {
+  background: #ffecec;
+  color: #d63031;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 13px;
+}

@@ -1,0 +1,161 @@
+/* ===== PAGE ===== */
+.projects-container {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6fb;
+  min-height: 100vh;
+}
+
+.projects-container h2 {
+  margin-bottom: 20px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ===== SEARCH ===== */
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 300px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-bar input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+}
+
+/* ===== CARD ===== */
+.projects-card {
+  background: #ffffff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.projects-card h3 {
+  margin-bottom: 15px;
+  color: #334155;
+}
+
+/* ===== TABLE ===== */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-table thead {
+  background: #1e293b;
+  color: #fff;
+}
+
+.projects-table th,
+.projects-table td {
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.projects-table th {
+  font-weight: 600;
+}
+
+.projects-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: 0.2s;
+}
+
+.projects-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+/* ===== STATUS ===== */
+.status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status.ongoing {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.status.completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* ===== DROPDOWN ===== */
+select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+select:hover {
+  border-color: #2563eb;
+}
+
+select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
+}
+
+/* ===== EMPLOYEE TAGS ===== */
+.emp-tag {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 6px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  margin: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* REMOVE BUTTON */
+.remove-btn {
+  margin-left: 8px;
+  cursor: pointer;
+  color: #ef4444;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.remove-btn:hover {
+  transform: scale(1.2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .search-bar input {
+    width: 100%;
+  }
+
+  .projects-card {
+    padding: 15px;
+  }
+
+  .projects-table th,
+  .projects-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
