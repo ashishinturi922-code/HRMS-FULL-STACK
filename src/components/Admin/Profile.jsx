@@ -55,7 +55,7 @@ const Profile = () => {
           return;
         }
 
-        const res = await fetch(`http://192.168.0.165:5000/api/profile/${userId}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/${userId}`);
         if (!res.ok) throw new Error("Server error");
         
         const dbData = await res.json();
@@ -75,7 +75,7 @@ const Profile = () => {
         });
         
         if (dbData.profile_photo) {
-          setImage(`http://192.168.0.165:5000${dbData.profile_photo}`);
+          setImage(`${process.env.REACT_APP_API_URL}${dbData.profile_photo}`);
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -102,13 +102,13 @@ const Profile = () => {
     const formData = new FormData();
     formData.append("photo", file);
 
-    fetch(`http://192.168.0.165:5000/api/profile/upload-photo/${data.id}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/api/profile/upload-photo/${data.id}`, {
       method: "POST",
       body: formData
     })
     .then(res => res.json())
     .then(r => {
-      const newUrl = `http://192.168.0.165:5000${r.photoUrl}`;
+      const newUrl = `${process.env.REACT_APP_API_URL}${r.photoUrl}`;
       setImage(newUrl);
       const user = JSON.parse(localStorage.getItem("user"));
       localStorage.setItem("user", JSON.stringify({...user, profile_photo: r.photoUrl}));
@@ -131,7 +131,7 @@ const Profile = () => {
     formData.append("type", dbColumnName);
 
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/profile/upload-doc/${data.id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/upload-doc/${data.id}`, {
         method: "POST",
         body: formData
       });
@@ -181,7 +181,7 @@ const Profile = () => {
     };
 
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/profile/${userId}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -215,7 +215,7 @@ const Profile = () => {
     if (passwords.newPassword !== passwords.confirmPassword) return alert("Passwords do not match");
     
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/profile/update-password", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/update-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: data.id, ...passwords })

@@ -43,7 +43,7 @@ const ManagerDashboardHome = () => {
       if (!storedUser || !storedUser.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/manager/stats/${storedUser.id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/stats/${storedUser.id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -83,7 +83,7 @@ const ManagerDashboardHome = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split('T')[0];
     
-    fetch(`http://192.168.0.165:5000/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

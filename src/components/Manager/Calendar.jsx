@@ -12,7 +12,7 @@ const ManagerCalendar = () => {
   // ✅ LOAD EVENTS FROM BACKEND DATABASE
   const fetchCalendarEvents = useCallback(async () => {
     try {
-      const response = await axios.get('http://192.168.0.165:5000/api/manager/calendar');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/manager/calendar`);
       const data = response.data;
 
       // Transform the database array into a date-keyed object for the grid

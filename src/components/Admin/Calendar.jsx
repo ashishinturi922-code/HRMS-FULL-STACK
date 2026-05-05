@@ -20,7 +20,7 @@ const AdminCalendar = () => {
   // ✅ 1. FETCH EVENTS FROM DATABASE
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://192.168.0.165:5000/api/calendar/events');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/events`);
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
@@ -65,7 +65,7 @@ const AdminCalendar = () => {
     };
 
     try {
-      const response = await fetch('http://192.168.0.165:5000/api/calendar/save', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -95,7 +95,7 @@ const AdminCalendar = () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/calendar/event/${eventToDelete.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/event/${eventToDelete.id}`, {
         method: 'DELETE'
       });
 

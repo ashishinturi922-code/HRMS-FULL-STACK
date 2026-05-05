@@ -42,7 +42,7 @@ const EmployeeDashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/employee/stats/${user.id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/stats/${user.id}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -82,7 +82,7 @@ const EmployeeDashboardHome = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split("T")[0];
 
-    fetch(`http://192.168.0.165:5000/api/employee/leave-today?date=${today}&empId=${user.id}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

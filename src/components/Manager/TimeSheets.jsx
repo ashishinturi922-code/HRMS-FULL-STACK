@@ -64,7 +64,7 @@ const ManagerTimeSheets = () => {
   // --- FETCH DATA ---
   const loadTimesheets = async () => {
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/manager/all-timesheets");
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/all-timesheets`);
       const data = await res.json();
       setTimesheets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -75,7 +75,7 @@ const ManagerTimeSheets = () => {
   const loadTLTimesheets = async () => {
     try {
       const res = await fetch(
-        `http://192.168.0.165:5000/api/manager/team-leads-timesheets/${currentUser?.id}`
+        `${process.env.REACT_APP_API_URL}/api/manager/team-leads-timesheets/${currentUser?.id}`
       );
       const data = await res.json();
       setTlTimesheets(Array.isArray(data) ? data : []);
@@ -89,7 +89,7 @@ const ManagerTimeSheets = () => {
   const loadManagerProjects = async () => {
     try {
       const res = await fetch(
-        `http://192.168.0.165:5000/api/manager/projects/${currentUser?.id}`
+        `${process.env.REACT_APP_API_URL}/api/manager/projects/${currentUser?.id}`
       );
       const data = await res.json();
       setManagerProjects(Array.isArray(data) ? data : []);
@@ -139,7 +139,7 @@ const ManagerTimeSheets = () => {
       task_date: formData.taskDate 
     };
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/manager/save-timesheet", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/save-timesheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -157,7 +157,7 @@ const ManagerTimeSheets = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/manager/timesheets/status/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
@@ -174,7 +174,7 @@ const ManagerTimeSheets = () => {
   const handleApproveTLTimesheet = async (timesheetId, status) => {
     try {
       const res = await fetch(
-        `http://192.168.0.165:5000/api/manager/approve-timesheet/${timesheetId}`,
+        `${process.env.REACT_APP_API_URL}/api/manager/approve-timesheet/${timesheetId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

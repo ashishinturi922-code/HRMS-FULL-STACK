@@ -41,7 +41,7 @@ const DashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/teamleader/stats/${user.id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/stats/${user.id}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -80,7 +80,7 @@ const DashboardHome = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split('T')[0];
     
-    fetch(`http://192.168.0.165:5000/api/teamleader/leave-today?date=${today}&tlId=${user.id}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/leave-today?date=${today}&tlId=${user.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

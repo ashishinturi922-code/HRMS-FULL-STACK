@@ -9,7 +9,7 @@ const AdminLeaveApproval = () => {
   const fetchManagerLeavesForAdmin = async () => {
     try {
       // Accessing the shared API endpoint
-      const response = await fetch("http://192.168.0.165:5000/api/admin/all-leaves");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-leaves`);
       const data = await response.json();
       
       // ✅ Filter: Only include requests where the role is 'manager'
@@ -32,7 +32,7 @@ const AdminLeaveApproval = () => {
   // ✅ Admin Action logic specifically for Manager requests
   const handleAction = async (leaveId, status) => {
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/admin/update-leave/${leaveId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/update-leave/${leaveId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),

@@ -19,7 +19,7 @@ const ManagerProfile = () => {
   // ✅ FETCH PROFILE FROM DATABASE
   const fetchProfile = useCallback(async (userId) => {
     try {
-      const res = await axios.get(`http://192.168.0.165:5000/api/manager/profile/${userId}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/manager/profile/${userId}`);
       const userData = res.data;
       
       // We map the backend names to the state
@@ -78,7 +78,7 @@ const ManagerProfile = () => {
     formData.append("userId", user.id || user.empId);
 
     try {
-      await axios.post("http://192.168.0.165:5000/api/manager/upload-doc", formData);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/manager/upload-doc`, formData);
     } catch (err) {
       console.error(`Error uploading ${type}:`, err);
     }
@@ -99,7 +99,7 @@ const ManagerProfile = () => {
         photo: image
       };
 
-      const res = await axios.put(`http://192.168.0.165:5000/api/manager/update-profile`, payload);
+      const res = await axios.put(`${process.env.REACT_APP_API_URL}/api/manager/update-profile`, payload);
 
       if (res.data.success) {
         // Update Local Storage

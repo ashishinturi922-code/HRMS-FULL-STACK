@@ -28,7 +28,7 @@ const CreateUser = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await fetch("http://192.168.0.165:5000/api/departments");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments`);
         if (response.ok) {
           const data = await response.json();
           // Data is now an array of objects: [{id: 1, name: "HR"}, ...]
@@ -60,7 +60,7 @@ const CreateUser = () => {
 
     try {
       // SEND DATA TO BACKEND
-      const response = await fetch("http://192.168.0.165:5000/api/users/create", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

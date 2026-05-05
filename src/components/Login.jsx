@@ -39,7 +39,7 @@ const Login = ({ setIsLoggedIn }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      const response = await fetch("http://192.168.0.165:5000/api/login", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +80,11 @@ const Login = ({ setIsLoggedIn }) => {
 
       // Handle different error types
       if (err.name === "AbortError") {
-        setError("Connection timeout. Please check if backend server is running on http://192.168.0.165:5000");
+        setError(
+          `Connection timeout. Please check if backend server is running on ${
+            process.env.REACT_APP_API_URL || "your configured API URL"
+          }`
+        );
       } else if (err instanceof TypeError) {
         setError("Cannot reach server. Make sure:\n1. Backend is running\n2. IP address is correct\n3. Firewall allows port 5000");
       } else {

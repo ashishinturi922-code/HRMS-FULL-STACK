@@ -30,7 +30,7 @@ const EmployeeProfile = () => {
       if (!loggedUser.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/employee/profile/${loggedUser.id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/profile/${loggedUser.id}`);
         const dbData = await response.json();
 
         if (response.ok) {
@@ -101,7 +101,7 @@ const EmployeeProfile = () => {
         photo: image 
       };
 
-      const response = await fetch("http://192.168.0.165:5000/api/employee/update-profile", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/update-profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

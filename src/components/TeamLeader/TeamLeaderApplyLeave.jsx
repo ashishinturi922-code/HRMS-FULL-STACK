@@ -22,7 +22,7 @@ const TeamLeaderApplyLeave = () => {
 
   const today = new Date().toISOString().split("T")[0];
   
-  const BACKEND_URL = "http://192.168.0.165:5000";
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
 
   const leaveOptions = [
     "Sick Leave",

@@ -18,7 +18,7 @@ const ManagerLeaveApprovals = () => {
   const [managerReason, setManagerReason] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = "http://localhost:5000";
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
 
   // ✅ FETCH EMPLOYEE LEAVES
   const fetchEmployeeLeaves = useCallback(async () => {

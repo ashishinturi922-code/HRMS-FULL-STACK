@@ -38,7 +38,7 @@ const DashboardHome = () => {
   };
 
   useEffect(() => {
-    fetch("http://192.168.0.165:5000/api/admin/stats")
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/stats`)
       .then(res => res.json())
       .then(data => {
          setDashboardData(prevState => ({
@@ -59,7 +59,7 @@ const DashboardHome = () => {
     setLoadingLeave(true);
     const today = new Date().toISOString().split('T')[0];
     
-    fetch(`http://192.168.0.165:5000/api/admin/leave-today?date=${today}`)
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/leave-today?date=${today}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

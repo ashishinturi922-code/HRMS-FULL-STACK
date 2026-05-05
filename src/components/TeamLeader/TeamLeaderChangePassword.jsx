@@ -52,7 +52,7 @@ const TeamLeaderChangePassword = () => {
       setLoading(true);
       
       // ✅ CONNECTED TO PERMANENT BACKEND ENDPOINT
-      const response = await fetch("http://192.168.0.165:5000/api/teamleader/change-password", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

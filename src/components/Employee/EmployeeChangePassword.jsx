@@ -64,7 +64,7 @@ const EmployeeChangePassword = () => {
     try {
       setLoading(true);
       // 🌐 API CALL TO BACKEND
-      const response = await fetch("http://192.168.0.165:5000/api/employee/update-password", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/update-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

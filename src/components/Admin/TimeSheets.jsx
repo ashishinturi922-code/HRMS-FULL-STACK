@@ -17,7 +17,7 @@ const AdminTimeSheets = () => {
   // ✅ FETCH DATA FROM LIVE DATABASE
   const loadTimesheets = async () => {
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/admin/all-timesheets");
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-timesheets`);
       const data = await res.json();
       
       console.log("Database response:", data); 
@@ -36,7 +36,7 @@ const AdminTimeSheets = () => {
   // ✅ UPDATE STATUS IN LIVE DATABASE
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/admin/timesheets/status/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })

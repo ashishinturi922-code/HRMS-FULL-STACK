@@ -13,7 +13,7 @@ const ManagerProjects = () => {
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [searchInput, setSearchInput] = useState("");
 
-  const BACKEND_URL = "http://192.168.0.165:5000";
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
 
   // ✅ FETCH DATA FROM DATABASE
   const fetchProjectData = useCallback(async () => {

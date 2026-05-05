@@ -15,7 +15,7 @@ const EmployeeCalendar = () => {
   const fetchEvents = async () => {
     try {
       // Calling the backend endpoint you created in EmployeeController
-      const response = await fetch("http://192.168.0.165:5000/api/employee/calendar");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/calendar`);
       const data = await response.json();
 
       if (response.ok) {

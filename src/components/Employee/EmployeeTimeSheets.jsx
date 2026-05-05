@@ -39,7 +39,7 @@ const EmployeeTimeSheets = () => {
   const loadTimesheets = async () => {
     if (!currentUser.id) return;
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/employee/my-timesheets/${currentUser.id}`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/my-timesheets/${currentUser.id}`);
       const data = await res.json();
       setTimesheets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -52,7 +52,7 @@ const EmployeeTimeSheets = () => {
 
   try {
     const res = await fetch(
-      `http://192.168.0.165:5000/api/employee/projects/${currentUser.id}`
+      `${process.env.REACT_APP_API_URL}/api/employee/projects/${currentUser.id}`
     );
     const data = await res.json();
     setProjects(Array.isArray(data) ? data : []);
@@ -132,7 +132,7 @@ if (format(selected) > format(today)) {
     };
 
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/employee/save-timesheet", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/save-timesheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
