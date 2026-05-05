@@ -2,6 +2,7 @@
   "name": "addition",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@capacitor/android": "^8.3.1",
     "@capacitor/cli": "^8.3.1",
@@ -47,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "cypress": "^15.14.1",
     "jest": "^27.5.1",
     "supertest": "^7.2.2"
   }
