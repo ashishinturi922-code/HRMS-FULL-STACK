@@ -346,41 +346,46 @@ class EmployeeController {
         }
     }
 
-    // 9. PROJECTS
-    async getMyProjects(req, res) {
-        try {
-            const { empId } = req.params;
+   // 9. PROJECTS
+	    async getMyProjects(req, res) {
+	        try {
+	            const { empId } = req.params;
 
-            if (!empId) {
-                return res.status(400).json({ error: "Employee ID is required" });
-            }
+	            if (!empId) {
+	                return res.status(400).json({ error: "Employee ID is required" });
+	            }
 
-            const [userRows] = await db.execute(
-                "SELECT employee_id FROM users WHERE id = ?",
-                [empId]
-            );
+	            const [userRows] = await db.execute(
+	                "SELECT employee_id FROM users WHERE id = ?",
+	                [empId]
+	            );
 
-            if (!userRows.length) {
-                return res.json([]);
-            }
+	            if (!userRows.length) {
+	                return res.json([]);
+	            }
 
-            const empCode = String(userRows[0].employee_id).trim();
+	            // The string ID (e.g., "ACS1001")
+	            const empCode = String(userRows[0].employee_id).trim();
 
-            const query = `
-                SELECT * FROM projects 
-                WHERE FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))
-                ORDER BY id DESC
-            `;
+	            // UPDATED QUERY: Check managerId, teamLeaderId, AND employeeIds
+	            const query = `
+	                SELECT * FROM projects 
+	                WHERE managerId = ? 
+	                   OR teamLeaderId = ? 
+	                   OR FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))
+	                ORDER BY id DESC
+	            `;
 
-            const [rows] = await db.execute(query, [empCode]);
-            res.json(rows || []);
+	            // Pass the appropriate variables to the ? placeholders in exact order
+	            const [rows] = await db.execute(query, [empCode, empId, empCode]);
+	            
+	            res.json(rows || []);
 
-        } catch (error) {
-            console.error("Fetch Projects Error:", error.message);
-            res.status(500).json({ error: "Failed to fetch projects" });
-        }
-    }
-
+	        } catch (error) {
+	            console.error("Fetch Projects Error:", error.message);
+	            res.status(500).json({ error: "Failed to fetch projects" });
+	        }
+	    }
     // 10. SAVE / SUBMIT TIMESHEET
     async saveTimesheet(req, res) {
         try {
