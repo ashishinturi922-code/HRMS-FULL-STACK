@@ -41,10 +41,10 @@ const TeamLeaderTimeSheets = () => {
 
   const loadTimesheets = async () => {
     try {
-      const resPending = await fetch(`http://192.168.0.165:5000/api/teamleader/timesheets/pending/${currentUser.id}`);
+      const resPending = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/timesheets/pending/${currentUser.id}`);
       const teamData = await resPending.json();
       
-      const resMy = await fetch(`http://192.168.0.165:5000/api/teamleader/my-timesheets/${currentUser.id}`);
+      const resMy = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/my-timesheets/${currentUser.id}`);
       const myData = await resMy.json();
 
       const safeTeamData = Array.isArray(teamData) ? teamData : [];
@@ -65,7 +65,7 @@ const TeamLeaderTimeSheets = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`http://192.168.0.165:5000/api/teamleader/timesheets/status/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
@@ -87,7 +87,7 @@ const TeamLeaderTimeSheets = () => {
 
   try {
     const res = await fetch(
-      `http://192.168.0.165:5000/api/teamleader/projects/${currentUser.id}`
+      `${process.env.REACT_APP_API_URL}/api/teamleader/projects/${currentUser.id}`
     );
     const data = await res.json();
 
@@ -155,7 +155,7 @@ if (format(selected) > format(today)) {
     };
 
     try {
-      const res = await fetch("http://192.168.0.165:5000/api/teamleader/save-timesheet", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/save-timesheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

@@ -46,7 +46,7 @@ const ManagerDashboard = ({ onLogout }) => {
             id: storedUser.id || "", 
             name: storedUser.name || "Manager",
             // If photo path is relative from backend, ensure it has the full URL
-            photo: storedUser.photo ? `http://192.168.0.165:5000${storedUser.photo}` : ""
+            photo: storedUser.photo ? `${process.env.REACT_APP_API_URL}${storedUser.photo}` : ""
           });
         }
       } catch (err) {

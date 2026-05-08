@@ -41,8 +41,12 @@ const DashboardHome = () => {
   };
 
   useEffect(() => {
+<<<<<<< HEAD
     // ✅ FIX: Use API_URL constant
     fetch(`${API_URL}/api/admin/stats`)
+=======
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/stats`)
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
          setDashboardData(prevState => ({
@@ -62,9 +66,14 @@ const DashboardHome = () => {
   const fetchLeaveEmployees = () => {
     setLoadingLeave(true);
     const today = new Date().toISOString().split('T')[0];
+<<<<<<< HEAD
 
     // ✅ FIX: Use API_URL constant
     fetch(`${API_URL}/api/admin/leave-today?date=${today}`)
+=======
+    
+    fetch(`${process.env.REACT_APP_API_URL}/api/admin/leave-today?date=${today}`)
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

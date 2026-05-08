@@ -45,8 +45,12 @@ const EmployeeDashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
+<<<<<<< HEAD
         // ✅ FIX 2: Use API_URL constant
         const response = await fetch(`${API_URL}/api/employee/stats/${user.id}`);
+=======
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/stats/${user.id}`);
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         const data = await response.json();
 
         if (response.ok) {
@@ -86,8 +90,12 @@ const EmployeeDashboardHome = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split("T")[0];
 
+<<<<<<< HEAD
     // ✅ FIX 3: Use API_URL constant — was hardcoded to LAN IP
     fetch(`${API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
+=======
+    fetch(`${process.env.REACT_APP_API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

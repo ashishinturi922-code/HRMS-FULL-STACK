@@ -39,8 +39,7 @@ const Login = ({ setIsLoggedIn }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      // ✅ POINTING DIRECTLY TO LOCALHOST 5000 (No .env needed)
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,11 +78,15 @@ const Login = ({ setIsLoggedIn }) => {
     } catch (err) {
       console.error("Login Error:", err);
 
-      // ✅ HARDCODED ERROR MESSAGES TO POINT TO LOCALHOST 5000
+      // Handle different error types
       if (err.name === "AbortError") {
-        setError("Connection timeout. Please check if backend server is running on http://localhost:5000");
+        setError(
+          `Connection timeout. Please check if backend server is running on ${
+            process.env.REACT_APP_API_URL || "your configured API URL"
+          }`
+        );
       } else if (err instanceof TypeError) {
-        setError("Cannot reach server. Make sure:\n1. Backend is running (npm start)\n2. Server is listening on http://localhost:5000\n3. Database connection is active");
+        setError("Cannot reach server. Make sure:\n1. Backend is running\n2. IP address is correct\n3. Firewall allows port 5000");
       } else {
         setError(err.message || "Unable to connect to server. Ensure backend is running.");
       }

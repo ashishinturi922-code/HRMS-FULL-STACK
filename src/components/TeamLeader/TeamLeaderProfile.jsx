@@ -10,7 +10,7 @@ const TeamLeaderProfile = () => {
   const [data, setData] = useState({});
   const [user, setUser] = useState(null);
 
-  const API_BASE = "http://192.168.0.165:5000";
+  const API_BASE = `${process.env.REACT_APP_API_URL}`;
 
   useEffect(() => {
     fetchProfile();

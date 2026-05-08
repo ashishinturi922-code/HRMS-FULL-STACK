@@ -33,8 +33,8 @@ const Projects = () => {
   const fetchData = async () => {
     try {
       const [projRes, empRes] = await Promise.all([
-        fetch("http://192.168.0.165:5000/api/projects"),
-        fetch("http://192.168.0.165:5000/api/employees")
+        fetch(`${process.env.REACT_APP_API_URL}/api/projects`),
+        fetch(`${process.env.REACT_APP_API_URL}/api/employees`)
       ]);
       const projData = await projRes.json();
       const empData = await empRes.json();
@@ -71,7 +71,7 @@ const Projects = () => {
     }
 
     try {
-      const response = await fetch("http://192.168.0.165:5000/api/projects/create", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,7 +93,7 @@ const Projects = () => {
   /* UPDATE STATUS (Complete Project) */
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/projects/${id}/status`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -108,7 +108,7 @@ const Projects = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this project?")) return;
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/projects/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/${id}`, {
         method: "DELETE"
       });
       if (response.ok) fetchData();

@@ -29,7 +29,7 @@ const ManagerApplyLeave = () => {
     "Marriage Leave","Half Day Leave","Menstruation Leave",
   ];
 
-  const BACKEND_URL = "http://192.168.0.165:5000";
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
 
   // ✅ DATE WINDOW: past 15 days + unlimited future
   const todayDate = new Date();

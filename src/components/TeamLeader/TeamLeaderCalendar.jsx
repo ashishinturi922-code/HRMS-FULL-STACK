@@ -16,7 +16,7 @@ const TeamLeaderCalendar = () => {
   const fetchCalendarEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://192.168.0.165:5000/api/teamleader/calendar-events");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/calendar-events`);
       
       // Safety check for non-200 responses (like 404 or 500)
       if (!response.ok) {

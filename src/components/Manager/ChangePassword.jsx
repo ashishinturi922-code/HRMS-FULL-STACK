@@ -58,7 +58,7 @@ const ManagerChangePassword = () => {
 
     try {
       // 2. 🔥 BACKEND API CALL
-      const response = await axios.put(`http://192.168.0.165:5000/api/manager/change-password`, {
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/manager/change-password`, {
         userId: user.id || user.empId, // Matches your DB primary key
         currentPassword: form.currentPassword,
         newPassword: form.newPassword

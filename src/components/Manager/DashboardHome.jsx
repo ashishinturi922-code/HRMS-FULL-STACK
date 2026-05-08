@@ -46,8 +46,12 @@ const ManagerDashboardHome = () => {
       if (!storedUser || !storedUser.id) return;
 
       try {
+<<<<<<< HEAD
         // ✅ FIX: Use API_URL constant
         const response = await fetch(`${API_URL}/api/manager/stats/${storedUser.id}`);
+=======
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/stats/${storedUser.id}`);
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -86,9 +90,14 @@ const ManagerDashboardHome = () => {
     setLoadingLeave(true);
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split('T')[0];
+<<<<<<< HEAD
 
     // ✅ FIX: Use API_URL constant
     fetch(`${API_URL}/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
+=======
+    
+    fetch(`${process.env.REACT_APP_API_URL}/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

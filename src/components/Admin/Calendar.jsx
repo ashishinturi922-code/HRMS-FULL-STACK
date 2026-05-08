@@ -40,7 +40,11 @@ const AdminCalendar = () => {
   // ✅ 1. FETCH EVENTS FROM DATABASE
   const fetchEvents = async () => {
     try {
+<<<<<<< HEAD
       const response = await fetch("http://192.168.0.165:5000/api/calendar/events");
+=======
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/events`);
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
@@ -88,9 +92,15 @@ const AdminCalendar = () => {
     };
 
     try {
+<<<<<<< HEAD
       const response = await fetch("http://192.168.0.165:5000/api/calendar/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+=======
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         body: JSON.stringify(payload)
       });
 
@@ -119,10 +129,16 @@ const AdminCalendar = () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
     try {
+<<<<<<< HEAD
       const response = await fetch(
         `http://192.168.0.165:5000/api/calendar/event/${eventToDelete.id}`,
         { method: "DELETE" }
       );
+=======
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/event/${eventToDelete.id}`, {
+        method: 'DELETE'
+      });
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
       if (response.ok) {
         await fetchEvents();

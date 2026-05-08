@@ -46,8 +46,12 @@ const CreateUser = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
+<<<<<<< HEAD
         // ✅ FIX: Using hardcoded API_URL
         const response = await fetch(`${API_URL}/api/departments`);
+=======
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments`);
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         if (response.ok) {
           const data = await response.json();
           setDepartments(data);
@@ -119,11 +123,16 @@ const CreateUser = () => {
     }
 
     try {
+<<<<<<< HEAD
       setLoading(true);
       setErrors({});
 
       // ✅ FIX: Using hardcoded API_URL
       const response = await fetch(`${API_URL}/api/users/create`, {
+=======
+      // SEND DATA TO BACKEND
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/create`, {
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

@@ -8,7 +8,7 @@ const Departments = () => {
   // 1. Fetch departments from database on load
   const fetchDepartments = async () => {
     try {
-      const response = await fetch("http://192.168.0.165:5000/api/departments");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments`);
       const data = await response.json();
       setDepartments(data);
     } catch (err) {
@@ -25,7 +25,7 @@ const Departments = () => {
     if (!deptName.trim()) return;
 
     try {
-      const response = await fetch("http://192.168.0.165:5000/api/departments/add", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: deptName }),
@@ -45,7 +45,7 @@ const Departments = () => {
     if (!window.confirm("Are you sure you want to delete this department?")) return;
 
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/departments/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments/${id}`, {
         method: "DELETE",
       });
 

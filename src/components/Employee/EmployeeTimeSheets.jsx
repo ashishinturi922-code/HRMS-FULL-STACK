@@ -54,7 +54,11 @@ const EmployeeTimeSheets = () => {
     if (!empNumericId) return;
     setPageLoading(true);
     try {
+<<<<<<< HEAD
       const res  = await fetch(`${API_URL}/api/employee/my-timesheets/${empNumericId}`);
+=======
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/my-timesheets/${currentUser.id}`);
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       const data = await res.json();
       setTimesheets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -77,10 +81,23 @@ const EmployeeTimeSheets = () => {
     }
   };
 
+<<<<<<< HEAD
   useEffect(() => {
     loadTimesheets();
     loadProjects();
   }, [empNumericId]);
+=======
+  try {
+    const res = await fetch(
+      `${process.env.REACT_APP_API_URL}/api/employee/projects/${currentUser.id}`
+    );
+    const data = await res.json();
+    setProjects(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Project Fetch Error:", err);
+  }
+};
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
   // =========================================
   // HANDLERS
@@ -157,8 +174,13 @@ const EmployeeTimeSheets = () => {
 
     setSubmitLoading(true);
     try {
+<<<<<<< HEAD
       const res = await fetch(`${API_URL}/api/employee/save-timesheet`, {
         method:  "POST",
+=======
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/save-timesheet`, {
+        method: "POST",
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(payload),
       });

@@ -20,7 +20,7 @@ const EmployeeProjects = () => {
     const fetchProjects = async () => {
       try {
         const res = await fetch(
-          `http://192.168.0.165:5000/api/employee/projects/${storedUser.id}`
+          `${process.env.REACT_APP_API_URL}/api/employee/projects/${storedUser.id}`
         );
         const data = await res.json();
 

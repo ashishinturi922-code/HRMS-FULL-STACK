@@ -20,6 +20,7 @@ const TeamLeaderApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [workingDays, setWorkingDays] = useState(0);
 
+<<<<<<< HEAD
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const minAllowedDate = new Date(todayDate);
@@ -29,6 +30,11 @@ const TeamLeaderApplyLeave = () => {
   const minDateStr = minAllowedDate.toISOString().split("T")[0];
 
   const BACKEND_URL = "http://192.168.0.165:5000";
+=======
+  const today = new Date().toISOString().split("T")[0];
+  
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
+>>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
   const leaveOptions = [
     "Sick Leave",

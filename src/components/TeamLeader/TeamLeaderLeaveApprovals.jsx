@@ -8,7 +8,7 @@ const TeamLeaderLeaveApprovals = () => {
 
   // Get current TL info from localStorage
   const currentUser = JSON.parse(localStorage.getItem("user")) || { id: null };
-  const BACKEND_URL = "http://192.168.0.165:5000"; 
+  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`; 
 
   // 1. Fetch leaves using the correct route defined in index.js
   const fetchLeaves = async () => {

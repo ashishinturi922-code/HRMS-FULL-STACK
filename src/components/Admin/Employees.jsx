@@ -9,7 +9,7 @@ const Employees = () => {
     // Fetch employees from the backend API
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("http://192.168.0.165:5000/api/employees");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employees`);
         if (response.ok) {
           const data = await response.json();
           setEmployees(data);

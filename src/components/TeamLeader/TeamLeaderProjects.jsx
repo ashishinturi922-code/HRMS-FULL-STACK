@@ -12,12 +12,12 @@ const TeamLeaderProjects = () => {
   const fetchData = async () => {
     try {
       const projRes = await fetch(
-        `http://192.168.0.165:5000/api/teamleader/projects/${currentUser?.id}`
+        `${process.env.REACT_APP_API_URL}/api/teamleader/projects/${currentUser?.id}`
       );
       const projData = await projRes.json();
 
       const empRes = await fetch(
-        `http://192.168.0.165:5000/api/teamleader/my-team/${currentUser?.id}`
+        `${process.env.REACT_APP_API_URL}/api/teamleader/my-team/${currentUser?.id}`
       );
       const empData = await empRes.json();
 
@@ -43,7 +43,7 @@ const TeamLeaderProjects = () => {
   const handleStatusChange = async (projectId, status) => {
     try {
       await fetch(
-        `http://192.168.0.165:5000/api/manager/projects/status/${projectId}`,
+        `${process.env.REACT_APP_API_URL}/api/manager/projects/status/${projectId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
