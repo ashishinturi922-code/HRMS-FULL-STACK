@@ -13,6 +13,9 @@ import {
   FaTimes
 } from "react-icons/fa";
 
+// ✅ FIX: Use localhost instead of hardcoded LAN IP
+const API_URL = "http://localhost:5000";
+
 const ManagerDashboardHome = () => {
 
   const [dashboardData, setDashboardData] = useState({
@@ -43,7 +46,8 @@ const ManagerDashboardHome = () => {
       if (!storedUser || !storedUser.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/manager/stats/${storedUser.id}`);
+        // ✅ FIX: Use API_URL constant
+        const response = await fetch(`${API_URL}/api/manager/stats/${storedUser.id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,7 +59,7 @@ const ManagerDashboardHome = () => {
 
         setDashboardData({
           managerName: storedUser.name || "Manager",
-          totalEmployees: stats.totalEmployees || 0,  // ✅ All org employees
+          totalEmployees: stats.totalEmployees || 0,
           activeProjects: stats.activeProjects || 0,
           completedProjects: stats.completedProjects || 0,
           pendingTimesheets: stats.pendingTimesheets || 0,
@@ -82,8 +86,9 @@ const ManagerDashboardHome = () => {
     setLoadingLeave(true);
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split('T')[0];
-    
-    fetch(`http://192.168.0.165:5000/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
+
+    // ✅ FIX: Use API_URL constant
+    fetch(`${API_URL}/api/manager/leave-today?date=${today}&managerId=${storedUser.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

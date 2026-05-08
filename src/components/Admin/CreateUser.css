@@ -1,417 +1,455 @@
-/* ===== CONTAINER ===== */
-.create-user-container {
+/* =========================================
+   GOOGLE FONT — Sora + DM Sans
+========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* =========================================
+   TOKENS
+========================================= */
+:root {
+  --primary:       #2563eb;
+  --primary-light: #eff6ff;
+  --primary-glow:  rgba(37,99,235,0.15);
+  --error:         #dc2626;
+  --error-light:   #fef2f2;
+  --success:       #16a34a;
+  --success-light: #f0fdf4;
+  --text-dark:     #0f172a;
+  --text-mid:      #475569;
+  --text-soft:     #94a3b8;
+  --border:        #e2e8f0;
+  --border-focus:  #2563eb;
+  --bg-page:       #f1f5f9;
+  --bg-card:       #ffffff;
+  --radius-card:   24px;
+  --radius-field:  14px;
+  --shadow-card:   0 4px 6px -1px rgba(15,23,42,0.06), 0 20px 50px -10px rgba(15,23,42,0.1);
+  --shadow-focus:  0 0 0 3px var(--primary-glow);
+  --transition:    0.22s ease;
+}
+
+/* =========================================
+   RESET
+========================================= */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   PAGE CONTAINER
+========================================= */
+.cu-container {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f4f7fb 0%, #e9ecef 100%);
+  align-items: flex-start;
+  padding: 48px 20px;
+  background:
+    radial-gradient(ellipse 70% 50% at 0% 0%,   #dbeafe 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, #dcfce7 0%, transparent 55%),
+    var(--bg-page);
+  font-family: 'DM Sans', sans-serif;
 }
 
-/* ===== FORM CARD ===== */
-.create-user-form {
-  background: white;
-  padding: 40px;
+/* =========================================
+   FORM CARD
+========================================= */
+.cu-form {
   width: 100%;
-  max-width: 560px;
-  border-radius: 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  animation: slideIn 0.4s ease-in-out;
+  max-width: 780px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 44px 48px 48px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  animation: cu-fadeUp 0.35s ease both;
 }
 
-/* ===== TITLE ===== */
-.create-user-form h2 {
-  grid-column: span 2;
-  text-align: center;
-  font-weight: 700;
-  color: #1e293b;
+/* =========================================
+   HEADER
+========================================= */
+.cu-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cu-header h2 {
+  font-family: 'Sora', sans-serif;
   font-size: 26px;
-  margin: 0 0 10px 0;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
 }
 
-/* ===== INPUT GROUP ===== */
-.input-group {
-  position: relative;
+.cu-header p {
+  font-size: 14px;
+  color: var(--text-mid);
+  font-weight: 400;
+}
+
+/* =========================================
+   BANNERS (success / error)
+========================================= */
+.cu-banner {
   display: flex;
   align-items: center;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: #f8fafc;
-  transition: all 0.3s ease;
-}
-
-.input-group:focus-within {
-  border-color: #4f46e5;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.input-group:hover {
-  border-color: #cbd5e1;
-}
-
-/* ===== ICON ===== */
-.input-group .icon {
-  margin-right: 12px;
-  color: #64748b;
-  font-size: 16px;
-  flex-shrink: 0;
-  transition: color 0.3s ease;
-}
-
-.input-group:focus-within .icon {
-  color: #4f46e5;
-}
-
-/* ===== INPUT FIELD ===== */
-.input-group input {
-  border: none;
-  outline: none;
-  width: 100%;
-  background: transparent;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 12px;
   font-size: 14px;
-  color: #1e293b;
-  font-family: inherit;
-  transition: color 0.2s ease;
+  font-weight: 500;
+  margin-bottom: 24px;
+  animation: cu-fadeUp 0.3s ease both;
 }
 
-.input-group input::placeholder {
+.cu-banner--success {
+  background: var(--success-light);
+  color: var(--success);
+  border: 1px solid #bbf7d0;
+}
+
+.cu-banner--error {
+  background: var(--error-light);
+  color: var(--error);
+  border: 1px solid #fecaca;
+}
+
+/* =========================================
+   GRID LAYOUT
+========================================= */
+.cu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* =========================================
+   FIELD — floating label
+========================================= */
+.cu-field {
+  position: relative;
+}
+
+.cu-field--full {
+  grid-column: span 2;
+}
+
+/* Input */
+.cu-field input {
+  width: 100%;
+  height: 60px;
+  padding: 22px 16px 6px 48px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-field);
+  background: #fafbfc;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.cu-field input:hover {
+  border-color: #93c5fd;
+  background: #fff;
+}
+
+.cu-field input:focus {
+  border-color: var(--border-focus);
+  background: #fff;
+  box-shadow: var(--shadow-focus);
+}
+
+.cu-field--error input {
+  border-color: var(--error);
+  background: var(--error-light);
+}
+
+.cu-field--error input:focus {
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
+}
+
+/* Floating Label */
+.cu-field label {
+  position: absolute;
+  top: 19px;
+  left: 48px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-soft);
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.cu-field label span {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+/* Float up when filled/focused */
+.cu-field input:focus + label,
+.cu-field input:not(:placeholder-shown) + label {
+  top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.3px;
+}
+
+.cu-field--error input:focus + label,
+.cu-field--error input:not(:placeholder-shown) + label {
+  color: var(--error);
+}
+
+/* Icon */
+.cu-field__icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--text-soft);
+  pointer-events: none;
+  transition: color var(--transition);
+  z-index: 1;
+}
+
+.cu-field input:focus ~ .cu-field__icon {
+  color: var(--primary);
+}
+
+/* Eye toggle button */
+.cu-field__eye {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 15px;
+  padding: 4px;
+  transition: color var(--transition);
+  z-index: 1;
+}
+
+.cu-field__eye:hover {
+  color: var(--primary);
+}
+
+/* Inline error message */
+.cu-field__msg {
+  display: block;
+  margin-top: 5px;
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 500;
+}
+
+/* =========================================
+   SELECT WRAPPER
+========================================= */
+.cu-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cu-select-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  letter-spacing: 0.2px;
+}
+
+.cu-select-label span {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.cu-select-box {
+  position: relative;
+}
+
+.cu-select-box .cu-field__icon {
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+}
+
+.cu-select-box select {
+  width: 100%;
+  height: 56px;
+  padding: 0 18px 0 48px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-field);
+  background: #fafbfc;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-dark);
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.cu-select-box select:hover {
+  border-color: #93c5fd;
+  background: #fff;
+}
+
+.cu-select-box select:focus {
+  border-color: var(--border-focus);
+  background: #fff;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Custom arrow */
+.cu-select-box::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-soft);
+  pointer-events: none;
+}
+
+.cu-field--error .cu-select-box select {
+  border-color: var(--error);
+  background: var(--error-light);
+}
+
+/* =========================================
+   SUBMIT BUTTON
+========================================= */
+.cu-submit {
+  width: 100%;
+  height: 58px;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--primary);
+  color: #fff;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+}
+
+.cu-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(37,99,235,0.35);
+}
+
+.cu-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.cu-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   SPINNER
+========================================= */
+.cu-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cu-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   PLACEHOLDER HIDE
+========================================= */
+input::placeholder {
   color: transparent;
 }
 
-.input-group input:focus {
-  color: #1e293b;
+/* =========================================
+   ANIMATIONS
+========================================= */
+@keyframes cu-fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== LABEL ===== */
-.input-group label {
-  position: absolute;
-  left: 44px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  font-weight: 500;
-  color: #94a3b8;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  background: #f8fafc;
-  padding: 0 4px;
+@keyframes cu-spin {
+  to { transform: rotate(360deg); }
 }
 
-.input-group:focus-within label {
-  top: -8px;
-  left: 40px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #4f46e5;
-  background: white;
-}
-
-.input-group input:not(:placeholder-shown) + label {
-  top: -8px;
-  left: 40px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #4f46e5;
-  background: white;
-}
-
-/* ===== FORM ROW ===== */
-.form-row {
-  grid-column: span 2;
-  display: flex;
-  gap: 24px;
-}
-
-/* ===== SELECT GROUP ===== */
-.select-group {
-  flex: 1;
-}
-
-.select-group label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  display: block;
-  color: #334155;
-}
-
-/* ===== SELECT BOX ===== */
-.select-box {
-  display: flex;
-  align-items: center;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 14px;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.select-box:focus-within {
-  border-color: #4f46e5;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.select-box:hover {
-  border-color: #cbd5e1;
-}
-
-.select-box .icon {
-  margin-right: 12px;
-  color: #64748b;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.select-box:focus-within .icon {
-  color: #4f46e5;
-}
-
-/* ===== SELECT FIELD ===== */
-.select-box select {
-  border: none;
-  outline: none;
-  width: 100%;
-  background: transparent;
-  font-size: 14px;
-  color: #1e293b;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  appearance: none;
-  padding-right: 24px;
-}
-
-.select-box select option {
-  background: white;
-  color: #1e293b;
-  padding: 10px;
-}
-
-.select-box select option:checked {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-}
-
-/* ===== SUBMIT BUTTON ===== */
-.create-user-form button {
-  grid-column: span 2;
-  padding: 14px 24px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-  margin-top: 10px;
-}
-
-.create-user-form button:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
-}
-
-.create-user-form button:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-}
-
-.create-user-form button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
+/* =========================================
+   RESPONSIVE — tablet
+========================================= */
 @media (max-width: 768px) {
-  .create-user-container {
-    padding: 20px 16px;
-  }
-
-  .create-user-form {
-    padding: 30px 24px;
-    gap: 18px;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .create-user-form h2 {
-    font-size: 22px;
-    margin-bottom: 8px;
-  }
-
-  .input-group {
-    padding: 11px 12px;
-  }
-
-  .input-group .icon {
-    font-size: 14px;
-    margin-right: 10px;
-  }
-
-  .input-group input {
-    font-size: 13px;
-  }
-
-  .input-group label {
-    left: 40px;
-    font-size: 12px;
-  }
-
-  .input-group:focus-within label,
-  .input-group input:not(:placeholder-shown) + label {
-    left: 36px;
-    font-size: 10px;
-  }
-
-  .select-group label {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-
-  .select-box {
-    padding: 10px 12px;
-  }
-
-  .select-box select {
-    font-size: 13px;
-  }
-
-  .create-user-form button {
-    padding: 12px 20px;
-    font-size: 14px;
+  .cu-form {
+    padding: 32px 28px 36px;
   }
 }
 
+/* =========================================
+   RESPONSIVE — mobile
+========================================= */
 @media (max-width: 600px) {
-  .create-user-container {
-    padding: 16px 12px;
+  .cu-container {
+    padding: 24px 14px;
+    align-items: flex-start;
   }
 
-  .create-user-form {
-    padding: 24px 18px;
-    gap: 16px;
+  .cu-form {
+    padding: 26px 20px 30px;
+    border-radius: 18px;
+  }
+
+  .cu-header h2 {
+    font-size: 22px;
+  }
+
+  .cu-grid {
     grid-template-columns: 1fr;
   }
 
-  .create-user-form h2 {
+  .cu-field--full {
     grid-column: span 1;
-    font-size: 20px;
   }
 
-  .input-group {
-    grid-column: auto;
+  .cu-field input {
+    height: 56px;
   }
 
-  .form-row {
-    grid-column: span 1;
-    flex-direction: column;
-    gap: 16px;
+  .cu-select-box select {
+    height: 52px;
   }
 
-  .select-group {
-    width: 100%;
-  }
-
-  .create-user-form button {
-    grid-column: span 1;
-    padding: 12px 18px;
+  .cu-submit {
+    height: 52px;
     font-size: 14px;
-  }
-
-  .input-group input {
-    font-size: 14px;
-  }
-
-  .input-group .icon {
-    font-size: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .create-user-container {
-    padding: 12px 8px;
-  }
-
-  .create-user-form {
-    padding: 20px 16px;
-    gap: 14px;
-  }
-
-  .create-user-form h2 {
-    font-size: 18px;
-    margin-bottom: 6px;
-  }
-
-  .input-group {
-    padding: 10px 10px;
-  }
-
-  .input-group .icon {
-    font-size: 13px;
-    margin-right: 8px;
-  }
-
-  .input-group input {
-    font-size: 13px;
-  }
-
-  .input-group label {
-    left: 38px;
-    font-size: 11px;
-  }
-
-  .input-group:focus-within label,
-  .input-group input:not(:placeholder-shown) + label {
-    left: 34px;
-    font-size: 9px;
-  }
-
-  .select-group label {
-    font-size: 11px;
-  }
-
-  .select-box {
-    padding: 9px 10px;
-  }
-
-  .select-box .icon {
-    font-size: 13px;
-  }
-
-  .select-box select {
-    font-size: 12px;
-  }
-
-  .create-user-form button {
-    padding: 11px 16px;
-    font-size: 13px;
-    margin-top: 6px;
-  }
-
-  .form-row {
-    gap: 12px;
   }
 }

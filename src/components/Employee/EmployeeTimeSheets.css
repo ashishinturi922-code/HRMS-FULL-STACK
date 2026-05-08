@@ -1,296 +1,654 @@
-/* ================= GLOBAL ================= */
-.page-container {
-  padding: 30px;
-  background: #f4f7fb;
+/* =========================================
+   GOOGLE FONTS — DM Sans + Sora
+========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* =========================================
+   TOKENS
+========================================= */
+:root {
+  --primary:        #2563eb;
+  --primary-dark:   #1d4ed8;
+  --primary-glow:   rgba(37,99,235,0.14);
+  --purple:         #7c3aed;
+  --purple-dark:    #6d28d9;
+  --success:        #16a34a;
+  --success-bg:     #f0fdf4;
+  --success-border: #bbf7d0;
+  --error:          #dc2626;
+  --error-bg:       #fef2f2;
+  --error-border:   #fecaca;
+  --warn-bg:        #fefce8;
+  --warn-border:    #fde68a;
+  --warn-text:      #b45309;
+  --text-dark:      #0f172a;
+  --text-mid:       #475569;
+  --text-soft:      #94a3b8;
+  --border:         #e2e8f0;
+  --bg-page:        #f1f5f9;
+  --bg-card:        #ffffff;
+  --radius:         14px;
+  --radius-sm:      8px;
+  --shadow:         0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-focus:   0 0 0 3px var(--primary-glow);
+  --transition:     0.2s ease;
+}
+
+/* =========================================
+   RESET
+========================================= */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+/* =========================================
+   PAGE
+========================================= */
+.ts-page {
+  padding: 32px 28px;
   min-height: 100vh;
-  font-family: "Inter", "Segoe UI", sans-serif;
+  background: var(--bg-page);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-dark);
+  position: relative;
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 25px;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-/* ================= TABS ================= */
-.tabs,
-.sub-tabs {
+/* =========================================
+   LOADER
+========================================= */
+.ts-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.tabs button,
-.sub-tabs button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  background: #e2e8f0;
-  color: #334155;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.3s;
-}
-
-.tabs button:hover,
-.sub-tabs button:hover {
-  background: #c7d2fe;
-}
-
-.tabs button.active {
-  background: #2563eb;
-  color: white;
-}
-
-.sub-tabs button.active {
-  background: #22c55e;
-  color: white;
-}
-
-/* ================= FORM ================= */
-.form-card {
-  max-width: 900px;
-  margin: auto;
-  background: #ffffff;
-  padding: 28px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
-.form-section {
-  margin-bottom: 25px;
-  padding: 20px;
-  border-radius: 10px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-.form-section h3 {
-  margin-bottom: 15px;
-  color: #1e293b;
-}
-
-/* GRID */
-.grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-}
-
-/* INPUTS */
-input,
-textarea,
-select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  transition: 0.25s;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: #2563eb;
-  outline: none;
-  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
-}
-
-input:disabled {
-  background: #f1f5f9;
-  color: #6b7280;
-}
-
-textarea {
-  margin-top: 12px;
-  min-height: 100px;
-  resize: none;
-}
-
-/* BUTTON */
-.submit-btn {
-  display: block;
-  margin: 25px auto 0;
-  padding: 12px 25px;
-  border-radius: 8px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.submit-btn:hover {
-  background: #1d4ed8;
-}
-
-/* ================= FILTER ================= */
-.filter-row {
-  display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  gap: 14px;
+}
+
+.ts-loader__spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: ts-spin 0.75s linear infinite;
+}
+
+.ts-loader p {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+.ts-header {
+  margin-bottom: 28px;
+}
+
+.ts-header h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+}
+
+.ts-header p {
+  font-size: 14px;
+  color: var(--text-mid);
+}
+
+/* =========================================
+   BANNERS
+========================================= */
+.ts-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  animation: ts-fadeIn 0.3s ease;
+}
+
+.ts-banner--success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.ts-banner--error {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
+}
+
+/* =========================================
+   MAIN TABS
+========================================= */
+.ts-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+
+.ts-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-mid);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.ts-tabs button:hover {
+  color: var(--primary);
+}
+
+.ts-tabs button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* =========================================
+   SUB TABS
+========================================= */
+.ts-subtabs {
+  display: flex;
+  gap: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-.filter-row select,
-.filter-row input {
-  width: 150px;
+.ts-subtabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-mid);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
 }
 
-/* ================= TABLE ================= */
-.table {
+.ts-subtabs button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow);
+}
+
+.ts-subtabs button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 3px 10px var(--primary-glow);
+}
+
+/* =========================================
+   GENERIC CARD
+========================================= */
+.ts-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  animation: ts-fadeUp 0.3s ease both;
+}
+
+/* =========================================
+   FORM CARD
+========================================= */
+.ts-form {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  animation: ts-fadeUp 0.3s ease both;
+}
+
+/* =========================================
+   FORM SECTIONS
+========================================= */
+.ts-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+
+.ts-section h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   GRIDS
+========================================= */
+.ts-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.ts-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.ts-grid--3 { grid-template-columns: repeat(3, 1fr); }
+
+/* =========================================
+   FORM FIELDS
+========================================= */
+.ts-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ts-field--full {
+  grid-column: 1 / -1;
+}
+
+.ts-field label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.req {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.ts-field input,
+.ts-field select,
+.ts-field textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.ts-field input:hover:not(:disabled),
+.ts-field select:hover,
+.ts-field textarea:hover {
+  border-color: #93c5fd;
+}
+
+.ts-field input:focus,
+.ts-field select:focus,
+.ts-field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-focus);
+}
+
+.ts-field input:disabled {
+  background: #f1f5f9;
+  color: var(--text-mid);
+  cursor: not-allowed;
+  font-weight: 600;
+}
+
+.ts-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* =========================================
+   FORM ACTIONS
+========================================= */
+.ts-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+.ts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.ts-btn--primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 3px 12px var(--primary-glow);
+}
+
+.ts-btn--primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px var(--primary-glow);
+}
+
+.ts-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ts-btn--ghost {
+  background: transparent;
+  color: var(--text-mid);
+  border: 1.5px solid var(--border);
+}
+
+.ts-btn--ghost:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ts-btn--purple {
+  background: var(--purple);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(124,58,237,0.2);
+}
+
+.ts-btn--purple:hover {
+  background: var(--purple-dark);
+  transform: translateY(-1px);
+}
+
+/* Inline spinner */
+.ts-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ts-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   FILTER ROW
+========================================= */
+.ts-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.ts-filter-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.ts-filter-row select,
+.ts-filter-row input[type="date"] {
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-dark);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.ts-filter-row select:focus,
+.ts-filter-row input[type="date"]:focus {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* =========================================
+   TABLE
+========================================= */
+.ts-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.ts-table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
-.table th {
-  background: #2563eb;
-  color: white;
-  padding: 12px;
+  background: var(--bg-card);
   font-size: 14px;
-  text-align: center;
 }
 
-.table td {
-  padding: 12px;
-  text-align: center;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+.ts-table thead tr {
+  background: var(--primary);
 }
 
-.table tr:hover {
-  background: #f9fafb;
-}
-
-/* ACTION BUTTON */
-.table button {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  cursor: pointer;
+.ts-table th {
+  padding: 12px 14px;
+  color: #fff;
   font-size: 13px;
-  transition: 0.2s;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
 }
 
-.table button:hover {
-  background: #2563eb;
+.ts-table td {
+  padding: 12px 14px;
+  text-align: center;
+  color: var(--text-mid);
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 500;
 }
 
-/* ================= STATUS ================= */
-.status {
-  padding: 5px 12px;
+.ts-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ts-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* =========================================
+   STATUS BADGES
+========================================= */
+.ts-badge {
+  display: inline-block;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.status.Pending {
-  background: #fef3c7;
-  color: #d97706;
-}
+.ts-badge--pending  { background: #fef3c7; color: #d97706; }
+.ts-badge--approved { background: #dcfce7; color: var(--success); }
+.ts-badge--rejected { background: #fee2e2; color: var(--error); }
 
-.status.Approved {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.status.Rejected {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-/* ================= SUMMARY CARDS ================= */
-.summary-cards {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin: 25px 0;
-  flex-wrap: wrap;
-}
-
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 200px;
-  text-align: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-}
-
-.card svg {
-  font-size: 26px;
-  margin-bottom: 10px;
-  color: #2563eb;
-}
-
-.card h4 {
-  margin-bottom: 8px;
-  color: #1e293b;
-}
-
-.card p {
-  font-size: 20px;
-  font-weight: bold;
-  color: #111827;
-}
-
-/* ================= REPORT ================= */
-.report-card {
-  text-align: center;
-  margin-top: 30px;
-}
-
-.report-card button {
-  padding: 12px 22px;
-  border-radius: 8px;
+/* =========================================
+   EDIT BUTTON
+========================================= */
+.ts-edit-btn {
+  padding: 5px 13px;
   border: none;
-  background: #7c3aed;
-  color: white;
-  font-weight: 600;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all var(--transition);
 }
 
-.report-card button:hover {
-  background: #6d28d9;
+.ts-edit-btn:hover {
+  background: var(--primary);
+  color: #fff;
 }
 
-/* ================= RESPONSIVE ================= */
-@media (max-width: 768px) {
-  .grid-2,
-  .grid-3 {
-    grid-template-columns: 1fr;
-  }
+/* =========================================
+   EMPTY STATE
+========================================= */
+.ts-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  background: #fafbfc;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  margin-top: 8px;
+}
 
-  .filter-row {
-    flex-direction: column;
-  }
+/* =========================================
+   SUMMARY STAT CARDS
+========================================= */
+.ts-stat-cards {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
 
-  .summary-cards {
-    flex-direction: column;
-    align-items: center;
-  }
+.ts-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 24px;
+  flex: 1;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+  transition: transform var(--transition);
+}
+
+.ts-stat:hover {
+  transform: translateY(-2px);
+}
+
+.ts-stat__icon {
+  font-size: 26px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.ts-stat__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.ts-stat__value {
+  font-family: 'Sora', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+/* =========================================
+   REPORT CARD
+========================================= */
+.ts-report {
+  text-align: center;
+  padding: 56px 28px;
+}
+
+.ts-report__icon {
+  font-size: 48px;
+  color: var(--purple);
+  margin-bottom: 16px;
+}
+
+.ts-report p {
+  font-size: 15px;
+  color: var(--text-mid);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+@keyframes ts-fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ts-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ts-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 900px) {
+  .ts-grid--3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .ts-page { padding: 20px 14px; }
+  .ts-grid--2,
+  .ts-grid--3 { grid-template-columns: 1fr; }
+  .ts-form,
+  .ts-card { padding: 20px 16px; }
+  .ts-section { padding: 16px; }
+  .ts-tabs button { padding: 8px 14px; font-size: 13px; }
+  .ts-stat { min-width: 140px; }
+  .ts-form-actions { flex-direction: column; }
+  .ts-btn { width: 100%; justify-content: center; }
 }

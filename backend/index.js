@@ -3,34 +3,37 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
-require('dotenv').config();
-const db = require('./db'); 
+const db = require('./db');
 const bcrypt = require('bcrypt');
 
 // --- CONTROLLERS ---
 const AdminController = require('./controllers/AdminController');
-const ManagerController = require('./controllers/ManagerController'); 
-const TeamLeaderController = require('./controllers/TeamLeaderController'); 
-const EmployeeController = require('./controllers/EmployeeController'); 
+const ManagerController = require('./controllers/ManagerController');
+const TeamLeaderController = require('./controllers/TeamLeaderController');
+const EmployeeController = require('./controllers/EmployeeController');
 
 const app = express();
 
-// ✅ CORS Configuration
+// ✅ CORS: Allow frontend on port 3000
 app.use(cors({
-    origin: '*',
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// ✅ Handle preflight OPTIONS requests
+app.options('*', cors());
+
+// ✅ Body parsers — MUST be before routes
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // --- DIRECTORY SETUP ---
 const uploadDirs = ['uploads/profiles', 'uploads/documents'];
-uploadDirs.forEach(dir => { 
+uploadDirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true }); 
+        fs.mkdirSync(dir, { recursive: true });
     }
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -47,75 +50,104 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- HEALTH CHECK ---
-app.get('/api/health', (req, res) => {
-    console.log('✅ Health check called');
-    res.json({ 
-        status: 'Server is running ✅',
-        timestamp: new Date().toISOString(),
-        port: process.env.PORT || 5000
-    });
+// --- BASE ROUTE ---
+app.get('/', (req, res) => {
+    res.json({ message: 'Addition Backend API is running. Use /api/health for status.' });
 });
 
-// --- AUTH (STRICT BCRYPT LOGIC) ---
+// --- HEALTH CHECK ---
+app.get('/api/health', async (req, res) => {
+    console.log('✅ Health check called');
+    try {
+        await db.execute('SELECT 1');
+        res.json({
+            status: 'Server is running ✅',
+            database: 'Connected ✅',
+            timestamp: new Date().toISOString(),
+            port: 5000
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'Server is running ✅',
+            database: `❌ DB Error: ${err.message}`,
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
+// --- LOGIN ROUTE ---
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     console.log(`🔐 Login attempt for user: ${username}`);
-    
+
+    // ✅ Validate input
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
+
     try {
+        // ✅ Check DB is available
         if (!db) {
             console.error('❌ Database not connected');
-            return res.status(500).json({ success: false, message: "Database connection error" });
+            return res.status(500).json({ success: false, message: 'Database connection error' });
         }
 
-        // 1. Fetch user by username only
         const [rows] = await db.execute(
-            'SELECT * FROM users WHERE username = ?', 
+            'SELECT * FROM users WHERE username = ?',
             [username]
         );
-        
-        if (rows.length > 0) {
-            const user = rows[0];
 
-            // 2. Compare provided plain text password with hashed password in DB
-            const isMatch = await bcrypt.compare(password, user.password);
-
-            if (isMatch) {
-                console.log(`✅ Login successful for: ${username}`);
-                res.json({ 
-                    success: true, 
-                    user: {
-                        id: user.id,
-                        username: user.username,
-                        email: user.email,
-                        role: user.role,
-                        department: user.department,
-                        name: user.name
-                    }
-                });
-            } else {
-                console.log(`❌ Incorrect password for: ${username}`);
-                res.status(401).json({ success: false, message: "Invalid credentials" });
-            }
-        } else {
+        if (rows.length === 0) {
             console.log(`❌ User not found: ${username}`);
-            res.status(401).json({ success: false, message: "Invalid credentials" });
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
-    } catch (error) { 
+
+        const user = rows[0];
+
+        // ✅ Compare password with bcrypt hash
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            console.log(`❌ Incorrect password for: ${username}`);
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
+        console.log(`✅ Login successful for: ${username} | Role: ${user.role}`);
+        return res.json({
+            success: true,
+            user: {
+                id:          user.id,
+                username:    user.username,
+                email:       user.email,
+                role:        user.role,
+                department:  user.department,
+                name:        user.name,
+                // ✅ FIX: Include employee_id (e.g. "ACS1001") so the
+                //         Timesheets page can display it in the Employee ID field.
+                employee_id: user.employee_id
+            }
+        });
+
+    } catch (error) {
         console.error('❌ Login error:', error);
-        res.status(500).json({ success: false, message: error.message }); 
+        return res.status(500).json({ success: false, message: 'Internal server error. Check console for details.' });
     }
 });
-app.get('/api/fix-admin', async (req, res) => {
+
+// --- TEMPORARY: Fix/hash a user password (DELETE BEFORE PRODUCTION) ---
+app.get('/api/fix-password/:username/:pass', async (req, res) => {
     try {
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-        await db.execute(
-            'UPDATE users SET password = ? WHERE username = ?', 
-            [hashedPassword, 'ashish']
+        const hashed = await bcrypt.hash(req.params.pass, 10);
+        const [result] = await db.execute(
+            'UPDATE users SET password = ? WHERE username = ?',
+            [hashed, req.params.username]
         );
-        res.send("✅ Password for 'ashish' has been reset to 'admin123' internally!");
+        if (result.affectedRows === 0) {
+            return res.status(404).send(`❌ User '${req.params.username}' not found`);
+        }
+        res.send(`✅ Password updated for '${req.params.username}'. Delete this route before going to production!`);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).send(`❌ Error: ${err.message}`);
     }
 });
 
@@ -131,7 +163,6 @@ app.get('/api/admin/leave-today', (req, res) => AdminController.getLeaveEmployee
 app.get('/api/admin/timesheets', (req, res) => AdminController.getAllAdminTimesheets(req, res));
 app.get('/api/admin/all-timesheets', (req, res) => AdminController.getAllAdminTimesheets(req, res));
 app.put('/api/admin/timesheets/status/:id', (req, res) => AdminController.updateTimesheetStatus(req, res));
-
 app.post('/api/users/create', (req, res) => AdminController.createUser(req, res));
 app.delete('/api/users/:id', (req, res) => AdminController.deleteUser(req, res));
 app.post('/api/departments/add', (req, res) => AdminController.addDepartment(req, res));
@@ -154,7 +185,7 @@ app.get('/api/manager/projects/:managerId', (req, res) => ManagerController.getM
 app.get('/api/manager/projects/:projectId/employees', (req, res) => ManagerController.getProjectEmployees(req, res));
 app.put('/api/manager/projects/assign-employees/:projectId', (req, res) => ManagerController.assignEmployeesToProject(req, res));
 app.put('/api/manager/projects/remove-employee/:projectId/:employeeId', (req, res) => ManagerController.removeEmployeeFromProject(req, res));
-app.get('/api/manager/my-leaves/:id', (req, res) => ManagerController.getMyLeaves(req, res)); 
+app.get('/api/manager/my-leaves/:id', (req, res) => ManagerController.getMyLeaves(req, res));
 app.get('/api/manager/pending-approvals', (req, res) => ManagerController.getPendingApprovals(req, res));
 app.post('/api/manager/apply-leave', (req, res) => ManagerController.applyLeave(req, res));
 app.delete('/api/manager/delete-leave/:leaveId', (req, res) => ManagerController.deleteLeave(req, res));
@@ -171,6 +202,8 @@ app.put('/api/manager/approve-timesheet/:timesheetId', (req, res) => ManagerCont
 app.put('/api/manager/approve-leave/:leaveId', (req, res) => ManagerController.approveLeavRequest(req, res));
 app.get('/api/tl-leave/requests/:managerId', (req, res) => ManagerController.getTeamLeaderLeaveRequests(req, res));
 app.put('/api/tl-leave/approve/:leaveId', (req, res) => ManagerController.approveTLLeaveRequest(req, res));
+// ✅ FIX: Register the manager leave-today route — was missing, causing the modal to always show empty
+app.get('/api/manager/leave-today', (req, res) => ManagerController.getLeaveEmployeesToday(req, res));
 
 // --- TEAM LEADER ROUTES ---
 app.get('/api/teamleader/stats/:tlId', (req, res) => TeamLeaderController.getDashboardStats(req, res));
@@ -208,24 +241,27 @@ app.delete('/api/employee/delete-leave/:leaveId', (req, res) => EmployeeControll
 app.get('/api/employee/my-timesheets/:empId', (req, res) => EmployeeController.getMyTimesheets(req, res));
 app.post('/api/employee/save-timesheet', (req, res) => EmployeeController.saveTimesheet(req, res));
 app.post('/api/employee/submit-timesheet', (req, res) => EmployeeController.submitTimesheet(req, res));
+// ✅ FIX: Register the leave-today route — was missing, causing the modal to always show empty
+app.get('/api/employee/leave-today', (req, res) => EmployeeController.getDepartmentLeaveToday(req, res));
 
 // --- 404 HANDLER ---
 app.use((req, res) => {
-    res.status(404).json({ error: "Route not found" });
+    res.status(404).json({ error: `Route not found: ${req.method} ${req.url}` });
 });
 
-// --- ERROR HANDLER ---
+// --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {
     console.error('❌ Server Error:', err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
 // --- SERVER STARTUP ---
+// ✅ FIX: Removed 'localhost' hostname binding — was causing connection refusals
 const PORT = process.env.PORT || 5000;
-const HOST = '0.0.0.0';
 
-app.listen(PORT, HOST, () => {
-    console.log(`✅ Server running on http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`🚀 API Health: http://localhost:${PORT}/api/health`);
 });
 
 module.exports = app;

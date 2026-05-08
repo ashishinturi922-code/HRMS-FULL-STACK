@@ -20,8 +20,14 @@ const TeamLeaderApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [workingDays, setWorkingDays] = useState(0);
 
-  const today = new Date().toISOString().split("T")[0];
-  
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const minAllowedDate = new Date(todayDate);
+  minAllowedDate.setDate(todayDate.getDate() - 15);
+
+  const today      = todayDate.toISOString().split("T")[0];
+  const minDateStr = minAllowedDate.toISOString().split("T")[0];
+
   const BACKEND_URL = "http://192.168.0.165:5000";
 
   const leaveOptions = [
@@ -44,6 +50,14 @@ const TeamLeaderApplyLeave = () => {
     if (!dateStr) return false;
     const day = new Date(dateStr).getDay();
     return day === 0 || day === 6;
+  };
+
+  // ✅ BLOCK DATES OLDER THAN 15 DAYS (future is always allowed)
+  const isOutOfRange = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    return d < minAllowedDate;
   };
 
   // ✅ CALCULATE WORKING DAYS (EXCLUDING WEEKENDS)
@@ -206,6 +220,12 @@ const TeamLeaderApplyLeave = () => {
       return;
     }
 
+    // ✅ ENFORCE: no dates older than 15 days (future is allowed)
+    if (isOutOfRange(fromDate) || isOutOfRange(toDate)) {
+      alert(`❌ Dates cannot be earlier than ${minDateStr} (15 days in the past)`);
+      return;
+    }
+
     // ✅ BLOCK WEEKEND START/END
     if (isWeekend(fromDate)) {
       alert("❌ Cannot apply leave starting on a weekend (Sat/Sun)");
@@ -361,6 +381,14 @@ const TeamLeaderApplyLeave = () => {
     <div className="leave-container">
       <h2>⏳ Team Leader Leave Management</h2>
 
+      {/* ✅ ALLOWED DATE RANGE BANNER */}
+      <div style={{
+        background: "#fff3cd", border: "1px solid #ffc107", borderRadius: "8px",
+        padding: "10px 16px", marginBottom: "12px", fontSize: "14px", color: "#856404"
+      }}>
+        📅 You can apply leave from <strong>{minDateStr}</strong> (15 days ago) onwards — including <strong>future dates</strong>.
+      </div>
+
       {/* CALENDAR HEADER */}
       <div className="calendar-header">
         <button onClick={() => changeMonth("prev")}>◀</button>
@@ -392,20 +420,24 @@ const TeamLeaderApplyLeave = () => {
             .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
           const isWeekendDay = isWeekend(date);
+          const isDisabled   = isWeekendDay || isOutOfRange(date);
 
           return (
             <div
               key={index}
-              className={`calendar-cell ${
-                isWeekendDay ? "weekend" : ""
-              }`}
+              className={`calendar-cell ${isWeekendDay ? "weekend" : ""} ${isOutOfRange(date) && !isWeekendDay ? "out-of-range" : ""}`}
+              style={isOutOfRange(date) && !isWeekendDay ? { opacity: 0.35, cursor: "not-allowed", background: "#f0f0f0" } : {}}
               onClick={() => {
-                if (isWeekendDay) return;
+                if (isDisabled) return;
                 setSelectedDate(date);
                 setFromDate(date);
                 setEditIndex(null);
               }}
-              title={isWeekendDay ? "Weekend" : "Available"}
+              title={
+                isWeekendDay     ? "Weekend" :
+                isOutOfRange(date) ? `Cannot select dates before ${minDateStr}` :
+                "Click to apply leave"
+              }
             >
               {day}
             </div>
@@ -423,6 +455,7 @@ const TeamLeaderApplyLeave = () => {
             <input
               type="date"
               value={fromDate}
+              min={minDateStr}
               onChange={(e) => setFromDate(e.target.value)}
               disabled={loading}
             />
@@ -460,6 +493,7 @@ const TeamLeaderApplyLeave = () => {
             <input
               type="date"
               value={toDate}
+              min={minDateStr}
               onChange={(e) => setToDate(e.target.value)}
               disabled={loading}
             />

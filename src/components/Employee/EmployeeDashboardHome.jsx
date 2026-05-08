@@ -12,6 +12,9 @@ import {
   FaTimes
 } from "react-icons/fa";
 
+// ✅ FIX 1: Use localhost instead of hardcoded LAN IP
+const API_URL = "http://localhost:5000";
+
 const EmployeeDashboardHome = () => {
   const [dashboardData, setDashboardData] = useState({
     name: "",
@@ -42,7 +45,8 @@ const EmployeeDashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
-        const response = await fetch(`http://192.168.0.165:5000/api/employee/stats/${user.id}`);
+        // ✅ FIX 2: Use API_URL constant
+        const response = await fetch(`${API_URL}/api/employee/stats/${user.id}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -82,7 +86,8 @@ const EmployeeDashboardHome = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split("T")[0];
 
-    fetch(`http://192.168.0.165:5000/api/employee/leave-today?date=${today}&empId=${user.id}`)
+    // ✅ FIX 3: Use API_URL constant — was hardcoded to LAN IP
+    fetch(`${API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

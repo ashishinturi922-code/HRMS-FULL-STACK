@@ -16,92 +16,75 @@ class EmployeeController {
         return count > 0 ? count : 0;
     }
 
-    // 1. GET DASHBOARD STATS (UPDATED - Include Managers and Team Leaders)
+    // 1. GET DASHBOARD STATS
     async getDashboardStats(req, res) {
         try {
             const { empId } = req.params;
 
-            const [userRows] = await db.execute('SELECT department FROM users WHERE id = ?', [empId]);
+            // Get this employee's numeric id AND their string employee_id code (e.g. "ACS1001")
+            const [userRows] = await db.execute(
+                'SELECT id, employee_id, department FROM users WHERE id = ?',
+                [empId]
+            );
             if (userRows.length === 0) return res.status(404).json({ error: "Employee not found" });
-            const empDept = userRows[0].department;
 
-            // ✅ UPDATED: Get ALL employees, team leaders, AND managers in ORGANIZATION
+            const empDept     = userRows[0].department;
+            const empCode     = String(userRows[0].employee_id || "").trim(); // e.g. "ACS1001"
+            const empNumericId = String(empId).trim();
+
+            // ✅ FIX 1: Total org count — include ALL roles (Employee, TeamLeader, Manager, Admin)
             const [allOrgRows] = await db.execute(
-                `SELECT COUNT(*) as total FROM users 
-                 WHERE role = 'Employee' 
-                    OR UPPER(TRIM(REPLACE(role, ' ', ''))) = 'TEAMLEADER'
-                    OR UPPER(TRIM(role)) = 'TEAM LEADER'
-                    OR role = 'TeamLeader'
-                    OR role = 'Team Leader'
-                    OR role = 'Manager'`
+                `SELECT COUNT(*) as total FROM users`
             );
             const totalOrganization = allOrgRows[0].total || 0;
 
-            // ✅ Get department employees count (for chart calculation)
-            const [deptEmpRows] = await db.execute(
-                `SELECT COUNT(*) as total FROM users 
-                 WHERE department = ? 
-                 AND (role = 'Employee' 
-                      OR UPPER(TRIM(REPLACE(role, ' ', ''))) = 'TEAMLEADER'
-                      OR UPPER(TRIM(role)) = 'TEAM LEADER'
-                      OR role = 'TeamLeader'
-                      OR role = 'Team Leader'
-                      OR role = 'Manager')`, 
-                [empDept]
-            );
-            const totalDeptEmployees = deptEmpRows[0].total || 0;
+            // ✅ FIX 2: Active & Completed projects for THIS employee
+            // Projects table stores employeeIds as a comma-separated string of employee_id codes.
+            // We also check managerId (employee_id code) and teamLeaderId (numeric id) columns.
+            let activeProjects = 0;
+            let completedProjects = 0;
+            try {
+                const [projects] = await db.execute(
+                    `SELECT status FROM projects 
+                     WHERE managerId = ?
+                        OR teamLeaderId = ?
+                        OR FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))`,
+                    [empCode, empNumericId, empCode]
+                );
+                activeProjects    = projects.filter(p => p.status === 'Ongoing' || p.status === 'Active').length;
+                completedProjects = projects.filter(p => p.status === 'Completed').length;
+            } catch (err) {
+                console.error("Project query error:", err.message);
+            }
 
+            // ✅ FIX 3: On Leave — count across the WHOLE ORGANIZATION (all roles, all departments)
             let leaveCount = 0;
             try {
-                // ✅ UPDATED: Get leave count for employees, team leaders, AND managers
                 const [leaveRows] = await db.execute(
-                    `SELECT COUNT(DISTINCT lr.user_id) as count 
+                    `SELECT COUNT(DISTINCT lr.user_id) as count
                      FROM leave_requests lr
                      JOIN users u ON lr.user_id = u.id
-                     WHERE u.department = ? 
-                     AND (u.role = 'Employee'
-                          OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                          OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                          OR u.role = 'TeamLeader'
-                          OR u.role = 'Team Leader'
-                          OR u.role = 'Manager')
-                     AND lr.status = 'Approved'
-                     AND CURRENT_DATE BETWEEN lr.from_date AND lr.to_date`,
-                    [empDept]
+                     WHERE lr.status = 'Approved'
+                     AND CURRENT_DATE BETWEEN lr.from_date AND lr.to_date`
                 );
                 leaveCount = leaveRows[0].count || 0;
             } catch (err) {
                 console.error("Leave query error:", err.message);
             }
 
-            const presentPeople = totalDeptEmployees - leaveCount;
-            const finalPresent = presentPeople < 0 ? 0 : presentPeople;
-
-            let activeProjects = 0;
-            let completedProjects = 0;
-            try {
-                const [projects] = await db.execute(
-                    `SELECT p.status FROM projects p 
-                     JOIN users u ON p.managerId = u.id 
-                     WHERE u.department = ?`,
-                    [empDept]
-                );
-                activeProjects = projects.filter(p => p.status === 'Ongoing' || p.status === 'Active').length;
-                completedProjects = projects.filter(p => p.status === 'Completed').length;
-            } catch (err) {
-                console.error("Project query error:", err.message);
-            }
+            const presentPeople = totalOrganization - leaveCount;
+            const finalPresent  = presentPeople < 0 ? 0 : presentPeople;
 
             res.json({
-                department: empDept,
-                totalEmployees: totalOrganization,
-                presentEmployees: finalPresent,
-                onLeave: leaveCount,
-                activeProjects: activeProjects,
+                department:        empDept,
+                totalEmployees:    totalOrganization,
+                presentEmployees:  finalPresent,
+                onLeave:           leaveCount,
+                activeProjects:    activeProjects,
                 completedProjects: completedProjects,
                 attendanceStats: [
                     { name: "Present", value: finalPresent },
-                    { name: "On Leave", value: leaveCount }
+                    { name: "Leave",   value: leaveCount  }
                 ]
             });
 
@@ -125,7 +108,7 @@ class EmployeeController {
 
             // ✅ VALIDATE DATES
             const fromDateObj = new Date(from_date);
-            const toDateObj = new Date(to_date);
+            const toDateObj   = new Date(to_date);
 
             if (fromDateObj > toDateObj) {
                 return res.status(400).json({ error: "From date cannot be after to date" });
@@ -133,7 +116,7 @@ class EmployeeController {
 
             // ✅ PREVENT WEEKEND START/END
             const fromDay = fromDateObj.getDay();
-            const toDay = toDateObj.getDay();
+            const toDay   = toDateObj.getDay();
             if (fromDay === 0 || fromDay === 6) {
                 return res.status(400).json({ error: "Cannot apply leave starting on a weekend" });
             }
@@ -284,9 +267,9 @@ class EmployeeController {
                 ...user,
                 personalEmail: user.personal_email,
                 officialEmail: user.official_email,
-                altPhone: user.alt_phone,
-                bloodGroup: user.blood_group,
-                photo: user.profile_photo 
+                altPhone:      user.alt_phone,
+                bloodGroup:    user.blood_group,
+                photo:         user.profile_photo 
             });
         } catch (error) {
             console.error("Get Profile Error:", error.message);
@@ -338,7 +321,12 @@ class EmployeeController {
     // 8. CALENDAR
     async getCalendarEvents(req, res) {
         try {
-            const [rows] = await db.execute('SELECT * FROM calendar_events ORDER BY date_key ASC');
+            // ✅ Return plain date strings (timezone-safe, consistent with AdminController fix)
+            const [rows] = await db.execute(
+                `SELECT id, title, description, category, start_time, end_time,
+                        DATE_FORMAT(date_key, '%Y-%m-%d') AS date_key
+                 FROM calendar_events ORDER BY date_key ASC`
+            );
             res.json(rows || []);
         } catch (error) {
             console.error("Calendar Fetch Error:", error.message);
@@ -346,7 +334,7 @@ class EmployeeController {
         }
     }
 
-    // 9. PROJECTS
+    // 9. PROJECTS — find projects where this employee is assigned
     async getMyProjects(req, res) {
         try {
             const { empId } = req.params;
@@ -364,15 +352,21 @@ class EmployeeController {
                 return res.json([]);
             }
 
+            // The string ID (e.g., "ACS1001")
             const empCode = String(userRows[0].employee_id).trim();
 
+            // UPDATED QUERY: Check managerId, teamLeaderId, AND employeeIds
             const query = `
                 SELECT * FROM projects 
-                WHERE FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))
+                WHERE managerId = ? 
+                   OR teamLeaderId = ? 
+                   OR FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))
                 ORDER BY id DESC
             `;
 
-            const [rows] = await db.execute(query, [empCode]);
+            // Pass the appropriate variables to the ? placeholders in exact order
+            const [rows] = await db.execute(query, [empCode, empId, empCode]);
+            
             res.json(rows || []);
 
         } catch (error) {
@@ -430,7 +424,7 @@ class EmployeeController {
         }
     }
 
-    // 12. ✅ GET DEPARTMENT LEAVE TODAY (UPDATED - Include Managers and Team Leaders)
+    // 12. GET DEPARTMENT LEAVE TODAY (Updated — whole org scope)
     async getDepartmentLeaveToday(req, res) {
         try {
             const { empId, date } = req.query;
@@ -439,32 +433,14 @@ class EmployeeController {
                 return res.status(400).json({ error: "empId and date are required" });
             }
 
-            const [userDept] = await db.execute(
-                'SELECT department FROM users WHERE id = ?',
-                [empId]
-            );
-
-            if (!userDept.length) {
-                return res.status(404).json({ error: "Employee not found" });
-            }
-
-            const dept = userDept[0].department;
-
-            // ✅ UPDATED: Get employees, team leaders, AND managers on leave
+            // ✅ FIXED: Return whole-organization employees on leave (not just department)
             const [employees] = await db.execute(
-                `SELECT u.id, u.name, u.employee_id, u.role
+                `SELECT u.id, u.name, u.employee_id, u.role, u.department
                  FROM leave_requests l
                  JOIN users u ON l.user_id = u.id
-                 WHERE u.department = ? 
-                 AND (u.role = 'Employee'
-                      OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                      OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                      OR u.role = 'TeamLeader'
-                      OR u.role = 'Team Leader'
-                      OR u.role = 'Manager')
-                 AND l.status = 'Approved'
+                 WHERE l.status = 'Approved'
                  AND ? BETWEEN l.from_date AND l.to_date`,
-                [dept, date]
+                [date]
             );
 
             res.json({ employees: employees || [] });

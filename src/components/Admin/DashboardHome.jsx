@@ -13,6 +13,9 @@ import {
   FaTimes
 } from "react-icons/fa";
 
+// ✅ FIX: Use localhost instead of hardcoded LAN IP
+const API_URL = "http://localhost:5000";
+
 const DashboardHome = () => {
 
   const [dashboardData, setDashboardData] = useState({
@@ -38,7 +41,8 @@ const DashboardHome = () => {
   };
 
   useEffect(() => {
-    fetch("http://192.168.0.165:5000/api/admin/stats")
+    // ✅ FIX: Use API_URL constant
+    fetch(`${API_URL}/api/admin/stats`)
       .then(res => res.json())
       .then(data => {
          setDashboardData(prevState => ({
@@ -58,11 +62,13 @@ const DashboardHome = () => {
   const fetchLeaveEmployees = () => {
     setLoadingLeave(true);
     const today = new Date().toISOString().split('T')[0];
-    
-    fetch(`http://192.168.0.165:5000/api/admin/leave-today?date=${today}`)
+
+    // ✅ FIX: Use API_URL constant
+    fetch(`${API_URL}/api/admin/leave-today?date=${today}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);
+        // ✅ FIX: AdminController now returns { employees: [] } shape (was returning flat array)
         setLeaveEmployees(data.employees || []);
         setLoadingLeave(false);
       })

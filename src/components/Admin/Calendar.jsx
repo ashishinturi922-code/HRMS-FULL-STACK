@@ -9,7 +9,7 @@ const AdminCalendar = () => {
   const [editIndex, setEditIndex] = useState(null);
 
   const [form, setForm] = useState({
-    id: null, 
+    id: null,
     title: "",
     description: "",
     category: ""
@@ -17,18 +17,39 @@ const AdminCalendar = () => {
 
   const today = new Date();
 
+  // ✅ FIXED: Timezone-safe date key extractor
+  // Converts any date value (ISO string, Date object, plain "YYYY-MM-DD") 
+  // to a local "YYYY-MM-DD" string WITHOUT shifting due to UTC offset.
+  const toLocalDateKey = (rawDate) => {
+    if (!rawDate) return "";
+
+    // If it's already a plain date string like "2026-05-08", return as-is
+    if (typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      return rawDate;
+    }
+
+    // If it's an ISO string like "2026-05-07T18:30:00.000Z",
+    // parse it and extract LOCAL date parts to avoid UTC offset shift
+    const d = new Date(rawDate);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // ✅ 1. FETCH EVENTS FROM DATABASE
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://192.168.0.165:5000/api/calendar/events');
+      const response = await fetch("http://192.168.0.165:5000/api/calendar/events");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
       const eventMap = {};
-      data.forEach(event => {
-        // Correctly handle the date_key from MySQL
-        const dateKey = event.date_key ? event.date_key.split('T')[0] : "";
-        
+      data.forEach((event) => {
+        // ✅ FIXED: Use toLocalDateKey instead of raw .split("T")[0]
+        // .split("T")[0] on a UTC ISO string gives the WRONG day in IST (+5:30)
+        const dateKey = toLocalDateKey(event.date_key);
+
         if (dateKey) {
           if (!eventMap[dateKey]) {
             eventMap[dateKey] = [];
@@ -57,25 +78,28 @@ const AdminCalendar = () => {
     if (!form.title || !selectedDate) return;
 
     const payload = {
-      id: form.id, 
-      date: selectedDate,
+      id: form.id,
+      date: selectedDate,   // Already a plain "YYYY-MM-DD" string — safe
       title: form.title,
       description: form.description,
-      category: form.category
+      category: form.category,
+      startTime: null,
+      endTime: null
     };
 
     try {
-      const response = await fetch('http://192.168.0.165:5000/api/calendar/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("http://192.168.0.165:5000/api/calendar/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        await fetchEvents(); // Refresh data from DB
+        await fetchEvents();
         resetForm();
       } else {
-        alert("Server failed to save the event.");
+        const err = await response.json().catch(() => ({}));
+        alert(`Server failed to save the event. ${err.error || ""}`);
       }
     } catch (error) {
       console.error("Error saving to database:", error);
@@ -86,7 +110,7 @@ const AdminCalendar = () => {
   // ✅ 3. DELETE EVENT
   const handleDeleteEvent = async (date, index) => {
     const eventToDelete = events[date][index];
-    
+
     if (!eventToDelete.id) {
       alert("Error: Missing event ID.");
       return;
@@ -95,12 +119,13 @@ const AdminCalendar = () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
     try {
-      const response = await fetch(`http://192.168.0.165:5000/api/calendar/event/${eventToDelete.id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `http://192.168.0.165:5000/api/calendar/event/${eventToDelete.id}`,
+        { method: "DELETE" }
+      );
 
       if (response.ok) {
-        await fetchEvents(); 
+        await fetchEvents();
       } else {
         alert("Failed to delete event from server.");
       }
@@ -109,6 +134,7 @@ const AdminCalendar = () => {
     }
   };
 
+  // ✅ Populate form when editing
   const handleEditEvent = (event, index) => {
     setForm({
       id: event.id,
@@ -175,7 +201,7 @@ const AdminCalendar = () => {
       </div>
 
       <div className="calendar-days">
-        {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
           <div key={d}>{d}</div>
         ))}
       </div>
@@ -185,8 +211,10 @@ const AdminCalendar = () => {
           if (!day) return <div key={index} className="empty"></div>;
 
           const dateKey = `${currentDate.getFullYear()}-${(
-            currentDate.getMonth()+1
-          ).toString().padStart(2,"0")}-${day.toString().padStart(2,"0")}`;
+            currentDate.getMonth() + 1
+          )
+            .toString()
+            .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
           const dayOfWeek = new Date(
             currentDate.getFullYear(),
@@ -226,23 +254,27 @@ const AdminCalendar = () => {
             <input
               placeholder="Title"
               value={form.title}
-              onChange={(e)=>setForm({...form,title:e.target.value})}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
 
             <textarea
               placeholder="Description"
               value={form.description}
-              onChange={(e)=>setForm({...form,description:e.target.value})}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
             />
 
             <input
-              placeholder="Category"
+              placeholder="Category (e.g. Holiday, Meeting)"
               value={form.category}
-              onChange={(e)=>setForm({...form,category:e.target.value})}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
 
             <div className="modal-actions">
-              <button className="cancel" onClick={resetForm}>Cancel</button>
+              <button className="cancel" onClick={resetForm}>
+                Cancel
+              </button>
               <button className="save" onClick={handleSaveEvent}>
                 {editIndex !== null ? "Update" : "Save"}
               </button>
@@ -256,8 +288,18 @@ const AdminCalendar = () => {
                     <p>{e.description}</p>
                   </div>
                   <div className="event-btns">
-                    <button className="edit-btn" onClick={() => handleEditEvent(e, i)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDeleteEvent(selectedDate, i)}>Delete</button>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEditEvent(e, i)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteEvent(selectedDate, i)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               ))}

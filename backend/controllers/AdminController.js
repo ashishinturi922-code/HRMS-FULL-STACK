@@ -7,14 +7,11 @@ class AdminController {
      */
 	async getDashboardStats(req, res) {
 	    try {
-	        // 1. Get real-time counts from the database
 	        const [empRows] = await db.execute('SELECT COUNT(*) as total FROM users');
 	        const [projRows] = await db.execute('SELECT COUNT(*) as count FROM projects WHERE status = "Ongoing"');
 	        const [doneRows] = await db.execute('SELECT COUNT(*) as count FROM projects WHERE status = "Completed"');
 	        const [deptRows] = await db.execute('SELECT COUNT(*) as count FROM departments');
 
-	        // 2. Query the ACTUAL number of employees on approved leave today
-	        // We use the column names from_date and to_date as per your DB schema
 	        const [leaveRows] = await db.execute(`
 	            SELECT COUNT(DISTINCT user_id) as onLeave 
 	            FROM leave_requests 
@@ -24,8 +21,6 @@ class AdminController {
 
 	        const totalEmployees = empRows[0].total || 0;
 	        const onLeaveCount = leaveRows[0].onLeave || 0;
-	        
-	        // 3. Calculate actual presence (Total Employees - People on Leave)
 	        const presentCount = totalEmployees - onLeaveCount;
 
 	        res.json({
@@ -34,7 +29,7 @@ class AdminController {
 	            activeProjects: projRows[0].count || 0,
 	            completedProjects: doneRows[0].count || 0,
 	            present: presentCount,
-	            absent: onLeaveCount, 
+	            absent: onLeaveCount,
 	            attendanceStats: [
 	                { name: "Present", value: presentCount },
 	                { name: "On Leave", value: onLeaveCount }
@@ -45,15 +40,16 @@ class AdminController {
 	        res.status(500).json({ error: "Could not fetch real-time dashboard stats" });
 	    }
 	}
+
     /**
      * 2. DEPARTMENT MANAGEMENT
      */
     async getDepartments(req, res) {
         try {
             const [rows] = await db.execute('SELECT * FROM departments ORDER BY id DESC');
-            res.json(Array.isArray(rows) ? rows : []); 
+            res.json(Array.isArray(rows) ? rows : []);
         } catch (error) {
-            res.status(500).json([]); 
+            res.status(500).json([]);
         }
     }
 
@@ -85,13 +81,9 @@ class AdminController {
         try {
             const { firstName, lastName, employeeId, email, phone, password, role, department } = req.body;
             const fullName = `${firstName} ${lastName}`;
-
-            // ✅ Hash the password before saving to DB
             const hashedPassword = await bcrypt.hash(password, 10);
-
             const sql = `INSERT INTO users (name, username, password, role, department, employee_id, phone) VALUES (?, ?, ?, ?, ?, ?, ?)`;
             await db.execute(sql, [fullName, email, hashedPassword, role, department, employeeId, phone]);
-
             res.status(201).json({ success: true, message: "User created successfully" });
         } catch (error) {
             console.error("Create User Error:", error);
@@ -176,26 +168,74 @@ class AdminController {
      */
     async getCalendarEvents(req, res) {
         try {
-            const [rows] = await db.execute('SELECT * FROM calendar_events ORDER BY date_key ASC');
+            // ✅ FIXED: Use DATE_FORMAT to return date_key as a plain "YYYY-MM-DD" string
+            // Without this, MySQL returns a full ISO timestamp (e.g. "2026-05-07T18:30:00.000Z")
+            // which when parsed in UTC shifts the date back by 1 day for IST (+5:30) users.
+            const [rows] = await db.execute(
+                `SELECT id, title, description, category, start_time, end_time,
+                        DATE_FORMAT(date_key, '%Y-%m-%d') AS date_key
+                 FROM calendar_events
+                 ORDER BY date_key ASC`
+            );
             res.json(Array.isArray(rows) ? rows : []);
         } catch (error) {
             res.status(500).json([]);
         }
     }
 
+    // ✅ FIX: startTime and endTime safely default to null if not sent
     async saveCalendarEvent(req, res) {
         try {
-            const { id, date, title, description, startTime, endTime, category } = req.body;
-            if (id) {
-                const sql = `UPDATE calendar_events SET title=?, description=?, start_time=?, end_time=?, category=?, date_key=? WHERE id=?`;
-                await db.execute(sql, [title, description, startTime, endTime, category, date, id]);
-            } else {
-                const sql = `INSERT INTO calendar_events (title, description, start_time, end_time, category, date_key) VALUES (?, ?, ?, ?, ?, ?)`;
-                await db.execute(sql, [title, description, startTime, endTime, category, date]);
+            const {
+                id,
+                date,
+                title,
+                description,
+                category,
+                startTime = null,
+                endTime = null
+            } = req.body;
+
+            if (!title || !date) {
+                return res.status(400).json({ error: "Title and date are required" });
             }
+
+            // ✅ FIXED: Validate that 'date' is a plain YYYY-MM-DD string.
+            // This prevents any accidental datetime/timezone shift at the DB level.
+            const plainDate = date.split("T")[0]; // strip time part if ever present
+
+            if (id) {
+                // UPDATE existing event
+                const sql = `UPDATE calendar_events 
+                             SET title=?, description=?, start_time=?, end_time=?, category=?, date_key=? 
+                             WHERE id=?`;
+                await db.execute(sql, [
+                    title,
+                    description || null,
+                    startTime,
+                    endTime,
+                    category || null,
+                    plainDate,
+                    id
+                ]);
+            } else {
+                // INSERT new event
+                const sql = `INSERT INTO calendar_events (title, description, start_time, end_time, category, date_key) 
+                             VALUES (?, ?, ?, ?, ?, ?)`;
+                await db.execute(sql, [
+                    title,
+                    description || null,
+                    startTime,
+                    endTime,
+                    category || null,
+                    plainDate
+                ]);
+            }
+
             res.json({ success: true, message: "Event saved successfully" });
         } catch (error) {
-            res.status(500).json({ error: "Failed to save event" });
+            console.error("Save Calendar Event Error:", error);
+            res.status(500).json({ error: "Failed to save event: " + error.message });
         }
     }
 
@@ -226,10 +266,10 @@ class AdminController {
     async updateProfile(req, res) {
         try {
             const { id } = req.params;
-            const { 
-                name, gender, phone, alt_phone, dob, doj, 
+            const {
+                name, gender, phone, alt_phone, dob, doj,
                 personal_email, username, blood_group, address,
-                manager_id 
+                manager_id
             } = req.body;
 
             const sql = `UPDATE users SET 
@@ -237,10 +277,10 @@ class AdminController {
                 personal_email=?, username=?, blood_group=?, address=?, 
                 manager_id=? 
                 WHERE id=?`;
-            
+
             await db.execute(sql, [
-                name, gender, phone, alt_phone, 
-                dob, doj, personal_email, username, 
+                name, gender, phone, alt_phone,
+                dob, doj, personal_email, username,
                 blood_group, address, manager_id, id
             ]);
 
@@ -257,16 +297,14 @@ class AdminController {
             const [rows] = await db.execute('SELECT password FROM users WHERE id = ?', [id]);
             if (rows.length === 0) return res.status(404).json({ error: "User not found" });
 
-            // ✅ Use bcrypt to compare
             const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
             if (!isMatch) {
                 return res.status(401).json({ error: "Current password incorrect" });
             }
 
-            // ✅ Hash the new password before updating
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id]);
-            
+
             res.json({ success: true, message: "Password updated successfully" });
         } catch (error) {
             res.status(500).json({ error: "Failed to update password" });
@@ -293,41 +331,46 @@ class AdminController {
 
 	async getLeaveEmployeesToday(req, res) {
 	        try {
+	            // ✅ FIX: Select u.id, u.name, u.employee_id explicitly so the
+	            //         modal can display name and employee code correctly.
+	            //         Also wrap response in { employees: [] } to match frontend.
 	            const sql = `
-	                SELECT l.*, u.name as employeeName, u.department, u.role
+	                SELECT u.id, u.name, u.employee_id, u.department, u.role,
+	                       l.leave_type, l.status
 	                FROM leave_requests l
 	                JOIN users u ON l.user_id = u.id
 	                WHERE l.status = 'Approved' 
-	                AND CURDATE() BETWEEN l.from_date AND l.to_date
+	                AND CURDATE() BETWEEN DATE(l.from_date) AND DATE(l.to_date)
+	                ORDER BY u.name ASC
 	            `;
 	            const [rows] = await db.execute(sql);
-	            res.json(Array.isArray(rows) ? rows : []);
+	            res.json({ employees: Array.isArray(rows) ? rows : [] });
 	        } catch (error) {
 	            console.error("Fetch Today's Leaves Error:", error);
-	            res.status(500).json([]);
+	            res.status(500).json({ employees: [] });
 	        }
 	    }
 
     async adminUpdateLeaveStatus(req, res) {
         try {
             const { leaveId } = req.params;
-            const { status } = req.body; 
-            
+            const { status } = req.body;
+
             const [leaveData] = await db.execute(
                 `SELECT l.id, l.user_id, l.leave_type, u.name as employeeName
                  FROM leave_requests l 
                  JOIN users u ON l.user_id = u.id 
-                 WHERE l.id = ?`, 
+                 WHERE l.id = ?`,
                 [leaveId]
             );
-            
+
             if (leaveData.length === 0) return res.status(404).json({ error: "Leave not found" });
 
             const leave = leaveData[0];
             await db.execute('UPDATE leave_requests SET status = ? WHERE id = ?', [status, leaveId]);
-            
+
             await this.createAdminLeaveNotification(leave.user_id, leave.employeeName, leave.leave_type, status);
-            
+
             res.json({ success: true, message: `Leave ${status} successfully` });
         } catch (error) {
             res.status(500).json({ error: "Failed to update leave status" });
@@ -357,7 +400,7 @@ class AdminController {
         try {
             const { id } = req.params;
             const { status } = req.body;
-            
+
             if (!id || !status) return res.status(400).json({ error: "Missing ID or status" });
 
             const [timesheetData] = await db.execute(
@@ -366,13 +409,13 @@ class AdminController {
                  JOIN users u ON t.user_id = u.id 
                  WHERE t.id = ?`, [id]
             );
-            
+
             if (timesheetData.length === 0) return res.status(404).json({ error: "Timesheet not found" });
 
             await db.execute('UPDATE timesheets SET status = ? WHERE id = ?', [status, id]);
-            
+
             await this.createAdminTimesheetNotification(timesheetData[0].user_id, timesheetData[0].employeeName, status);
-            
+
             res.json({ success: true, message: `Timesheet updated to ${status}` });
         } catch (error) {
             res.status(500).json({ error: "Failed to update status" });
