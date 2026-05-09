@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./Calendar.css";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const AdminCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -18,18 +20,13 @@ const AdminCalendar = () => {
   const today = new Date();
 
   // ✅ FIXED: Timezone-safe date key extractor
-  // Converts any date value (ISO string, Date object, plain "YYYY-MM-DD") 
-  // to a local "YYYY-MM-DD" string WITHOUT shifting due to UTC offset.
   const toLocalDateKey = (rawDate) => {
     if (!rawDate) return "";
 
-    // If it's already a plain date string like "2026-05-08", return as-is
     if (typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
       return rawDate;
     }
 
-    // If it's an ISO string like "2026-05-07T18:30:00.000Z",
-    // parse it and extract LOCAL date parts to avoid UTC offset shift
     const d = new Date(rawDate);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -40,18 +37,12 @@ const AdminCalendar = () => {
   // ✅ 1. FETCH EVENTS FROM DATABASE
   const fetchEvents = async () => {
     try {
-<<<<<<< HEAD
-      const response = await fetch("http://192.168.0.165:5000/api/calendar/events");
-=======
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/events`);
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
+      const response = await fetch(`${API_URL}/api/calendar/events`);
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
 
       const eventMap = {};
       data.forEach((event) => {
-        // ✅ FIXED: Use toLocalDateKey instead of raw .split("T")[0]
-        // .split("T")[0] on a UTC ISO string gives the WRONG day in IST (+5:30)
         const dateKey = toLocalDateKey(event.date_key);
 
         if (dateKey) {
@@ -83,7 +74,7 @@ const AdminCalendar = () => {
 
     const payload = {
       id: form.id,
-      date: selectedDate,   // Already a plain "YYYY-MM-DD" string — safe
+      date: selectedDate,
       title: form.title,
       description: form.description,
       category: form.category,
@@ -92,15 +83,9 @@ const AdminCalendar = () => {
     };
 
     try {
-<<<<<<< HEAD
-      const response = await fetch("http://192.168.0.165:5000/api/calendar/save", {
+      const response = await fetch(`${API_URL}/api/calendar/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-=======
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         body: JSON.stringify(payload)
       });
 
@@ -129,16 +114,9 @@ const AdminCalendar = () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
     try {
-<<<<<<< HEAD
-      const response = await fetch(
-        `http://192.168.0.165:5000/api/calendar/event/${eventToDelete.id}`,
-        { method: "DELETE" }
-      );
-=======
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/calendar/event/${eventToDelete.id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_URL}/api/calendar/event/${eventToDelete.id}`, {
+        method: "DELETE"
       });
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
       if (response.ok) {
         await fetchEvents();
@@ -150,7 +128,6 @@ const AdminCalendar = () => {
     }
   };
 
-  // ✅ Populate form when editing
   const handleEditEvent = (event, index) => {
     setForm({
       id: event.id,

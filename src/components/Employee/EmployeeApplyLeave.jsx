@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./EmployeeApplyLeave.css";
 
+const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const EmployeeApplyLeave = () => {
   const currentUser = JSON.parse(localStorage.getItem("user")) || {
     id: null,
@@ -21,43 +23,32 @@ const EmployeeApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [workingDays, setWorkingDays] = useState(0);
 
-<<<<<<< HEAD
-  const BACKEND_URL = "http://localhost:5000";
-
   // ✅ DATE WINDOW: up to 15 days in the past, unlimited future
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const minAllowedDate = new Date(today);
   minAllowedDate.setDate(today.getDate() - 15);
 
-  const todayStr   = today.toISOString().split("T")[0];
   const minDateStr = minAllowedDate.toISOString().split("T")[0];
-=======
-  const today = new Date().toISOString().split("T")[0];
-  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
   const leaveOptions = [
     "Sick Leave", "Casual Leave", "Work From Home (WFH)",
     "Half Day Leave"
   ];
 
-  // ✅ CHECK IF DATE IS WEEKEND
   const isWeekend = (dateStr) => {
     if (!dateStr) return false;
     const day = new Date(dateStr).getDay();
     return day === 0 || day === 6;
   };
 
-  // ✅ CHECK IF DATE IS BEFORE THE 15-DAY PAST LIMIT (future is always allowed)
   const isOutOfRange = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
     d.setHours(0, 0, 0, 0);
-    return d < minAllowedDate; // ✅ Only block beyond 15 past days; future is open
+    return d < minAllowedDate; 
   };
 
-  // ✅ CALCULATE WORKING DAYS (EXCLUDING WEEKENDS)
   const calculateWorkingDays = (start, end) => {
     if (!start || !end) return 0;
     let count = 0;
@@ -79,7 +70,6 @@ const EmployeeApplyLeave = () => {
     }
   }, [fromDate, toDate]);
 
-  // ✅ FETCH LEAVES FROM BACKEND
   const fetchLeaves = useCallback(async () => {
     if (!currentUser.id) return;
     try {
@@ -119,7 +109,6 @@ const EmployeeApplyLeave = () => {
     setCurrentDate(newDate);
   };
 
-  // ✅ CHECK FOR OVERLAPPING LEAVES
   const isOverlapping = (newFromStr, newToStr) => {
     if (!newFromStr || !newToStr) return false;
     const newFrom = new Date(newFromStr);
@@ -145,7 +134,6 @@ const EmployeeApplyLeave = () => {
     });
   };
 
-  // ✅ SUBMIT LEAVE
   const handleSubmit = async () => {
     if (!leaveType || !fromDate || !toDate || !reason) {
       alert("❌ Fill all fields");
@@ -161,7 +149,7 @@ const EmployeeApplyLeave = () => {
       alert("❌ Invalid date range");
       return;
     }
-    // ✅ ENFORCE: no dates older than 15 days (future is allowed)
+    
     if (isOutOfRange(fromDate) || isOutOfRange(toDate)) {
       alert(`❌ Dates cannot be earlier than ${minDateStr} (15 days in the past)`);
       return;
@@ -227,7 +215,6 @@ const EmployeeApplyLeave = () => {
     }
   };
 
-  // ✅ DELETE LEAVE REQUEST
   const handleDelete = async (leaveId) => {
     if (!window.confirm("Are you sure you want to cancel this leave request?")) return;
     try {
@@ -265,7 +252,6 @@ const EmployeeApplyLeave = () => {
     <div className="leave-container">
       <h2>📋 Employee Leave Management</h2>
 
-      {/* ✅ SHOW ALLOWED DATE RANGE */}
       <div style={{
         background: "#fff3cd", border: "1px solid #ffc107", borderRadius: "8px",
         padding: "10px 16px", marginBottom: "12px", fontSize: "14px", color: "#856404"
@@ -273,7 +259,6 @@ const EmployeeApplyLeave = () => {
         📅 You can apply leave from <strong>{minDateStr}</strong> (15 days ago) onwards — including <strong>future dates</strong>.
       </div>
 
-      {/* CALENDAR HEADER */}
       <div className="calendar-header">
         <button onClick={() => changeMonth("prev")}>◀</button>
         <h3>
@@ -283,7 +268,6 @@ const EmployeeApplyLeave = () => {
         <button onClick={() => changeMonth("next")}>▶</button>
       </div>
 
-      {/* DAYS OF WEEK */}
       <div className="calendar-days">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
           <div key={d} className={d === "Sun" || d === "Sat" ? "weekend-header" : ""}>
@@ -292,7 +276,6 @@ const EmployeeApplyLeave = () => {
         ))}
       </div>
 
-      {/* CALENDAR GRID */}
       <div className="calendar-grid">
         {getDays().map((day, index) => {
           if (!day) return <div key={index} className="empty"></div>;
@@ -301,7 +284,6 @@ const EmployeeApplyLeave = () => {
             .toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
           const isWeekendDay  = isWeekend(date);
-          // ✅ Grey out dates outside the 15-day window
           const isDisabled    = isOutOfRange(date) || isWeekendDay;
 
           return (
@@ -326,14 +308,12 @@ const EmployeeApplyLeave = () => {
         })}
       </div>
 
-      {/* MODAL - APPLY LEAVE */}
       {selectedDate && (
         <div className="modal">
           <div className="modal-box">
             <h3>📋 Apply Leave</h3>
 
             <label>From Date:</label>
-            {/* ✅ min enforces 15-day past limit; no max = future allowed */}
             <input
               type="date"
               value={fromDate}
@@ -369,7 +349,6 @@ const EmployeeApplyLeave = () => {
             )}
 
             <label>To Date:</label>
-            {/* ✅ min enforces 15-day past limit; no max = future allowed */}
             <input
               type="date"
               value={toDate}
@@ -427,7 +406,6 @@ const EmployeeApplyLeave = () => {
         </div>
       )}
 
-      {/* LEAVE HISTORY TABLE */}
       <h3>📋 Your Leave History</h3>
 
       {loading && (

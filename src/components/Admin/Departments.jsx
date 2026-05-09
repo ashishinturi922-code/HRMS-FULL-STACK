@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./Departments.css";
 
+// ✅ FIX: Added the safe API_URL fallback
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const Departments = () => {
   const [deptName, setDeptName] = useState("");
   const [departments, setDepartments] = useState([]);
@@ -8,7 +11,7 @@ const Departments = () => {
   // 1. Fetch departments from database on load
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments`);
+      const response = await fetch(`${API_URL}/api/departments`);
       const data = await response.json();
       setDepartments(data);
     } catch (err) {
@@ -25,7 +28,7 @@ const Departments = () => {
     if (!deptName.trim()) return;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments/add`, {
+      const response = await fetch(`${API_URL}/api/departments/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: deptName }),
@@ -45,7 +48,7 @@ const Departments = () => {
     if (!window.confirm("Are you sure you want to delete this department?")) return;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments/${id}`, {
+      const response = await fetch(`${API_URL}/api/departments/${id}`, {
         method: "DELETE",
       });
 

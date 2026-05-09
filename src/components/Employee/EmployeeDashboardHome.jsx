@@ -12,8 +12,7 @@ import {
   FaTimes
 } from "react-icons/fa";
 
-// ✅ FIX 1: Use localhost instead of hardcoded LAN IP
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const EmployeeDashboardHome = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -45,12 +44,7 @@ const EmployeeDashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
-<<<<<<< HEAD
-        // ✅ FIX 2: Use API_URL constant
         const response = await fetch(`${API_URL}/api/employee/stats/${user.id}`);
-=======
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/stats/${user.id}`);
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         const data = await response.json();
 
         if (response.ok) {
@@ -90,12 +84,7 @@ const EmployeeDashboardHome = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     const today = new Date().toISOString().split("T")[0];
 
-<<<<<<< HEAD
-    // ✅ FIX 3: Use API_URL constant — was hardcoded to LAN IP
     fetch(`${API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
-=======
-    fetch(`${process.env.REACT_APP_API_URL}/api/employee/leave-today?date=${today}&empId=${user.id}`)
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);
@@ -119,13 +108,11 @@ const EmployeeDashboardHome = () => {
     <div className="dashboard-home">
       <div className="dashboard-wrapper">
 
-        {/* GREETING */}
         <div className="greeting-card">
           <h2>{getGreeting()}, {dashboardData.name} 👋</h2>
           <p>Welcome to your Employee Dashboard</p>
         </div>
 
-        {/* STATS - 4 CARDS */}
         <div className="stats-container">
           <div className="stat-card employees">
             <div className="icon-box"><FaUsers /></div>
@@ -164,7 +151,6 @@ const EmployeeDashboardHome = () => {
           </div>
         </div>
 
-        {/* ATTENDANCE CHART */}
         <div className="chart-card">
           <h3>Department Attendance Overview</h3>
           <div style={{ width: "100%", height: 260 }}>
@@ -191,7 +177,6 @@ const EmployeeDashboardHome = () => {
 
       </div>
 
-      {/* ===== LEAVE MODAL ===== */}
       {showLeaveModal && (
         <div className="modal-overlay">
           <div className="modal-content">

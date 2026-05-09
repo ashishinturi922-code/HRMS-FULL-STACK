@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./Employees.css";
 
+// ✅ FIX: Added the safe API_URL fallback
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -9,7 +12,7 @@ const Employees = () => {
     // Fetch employees from the backend API
     const fetchEmployees = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employees`);
+        const response = await fetch(`${API_URL}/api/employees`);
         if (response.ok) {
           const data = await response.json();
           setEmployees(data);
@@ -22,7 +25,7 @@ const Employees = () => {
     fetchEmployees();
   }, []);
 
-  // Search logic remains the same, but check that property names match backend data
+  // Search logic
   const filteredEmployees = employees.filter((emp) => {
     const search = searchTerm.toLowerCase();
     return (

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./TeamLeaderCommon.css";
 
+const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const TeamLeaderApplyLeave = () => {
   const currentUser = JSON.parse(localStorage.getItem("user")) || {
     name: "Suresh",
@@ -20,21 +22,12 @@ const TeamLeaderApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [workingDays, setWorkingDays] = useState(0);
 
-<<<<<<< HEAD
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const minAllowedDate = new Date(todayDate);
   minAllowedDate.setDate(todayDate.getDate() - 15);
 
-  const today      = todayDate.toISOString().split("T")[0];
   const minDateStr = minAllowedDate.toISOString().split("T")[0];
-
-  const BACKEND_URL = "http://192.168.0.165:5000";
-=======
-  const today = new Date().toISOString().split("T")[0];
-  
-  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
   const leaveOptions = [
     "Sick Leave",
@@ -51,14 +44,12 @@ const TeamLeaderApplyLeave = () => {
     "Menstruation Leave"
   ];
 
-  // ✅ CHECK IF DATE IS WEEKEND
   const isWeekend = (dateStr) => {
     if (!dateStr) return false;
     const day = new Date(dateStr).getDay();
     return day === 0 || day === 6;
   };
 
-  // ✅ BLOCK DATES OLDER THAN 15 DAYS (future is always allowed)
   const isOutOfRange = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
@@ -66,7 +57,6 @@ const TeamLeaderApplyLeave = () => {
     return d < minAllowedDate;
   };
 
-  // ✅ CALCULATE WORKING DAYS (EXCLUDING WEEKENDS)
   const calculateWorkingDays = (start, end) => {
     if (!start || !end) return 0;
     
@@ -83,7 +73,6 @@ const TeamLeaderApplyLeave = () => {
     return count > 0 ? count : 0;
   };
 
-  // ✅ UPDATE WORKING DAYS WHEN DATES CHANGE
   useEffect(() => {
     if (fromDate && toDate) {
       const days = calculateWorkingDays(fromDate, toDate);
@@ -93,7 +82,6 @@ const TeamLeaderApplyLeave = () => {
     }
   }, [fromDate, toDate]);
 
-  // ✅ FETCH LEAVE REQUESTS FROM BACKEND
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
@@ -142,7 +130,6 @@ const TeamLeaderApplyLeave = () => {
     setCurrentDate(newDate);
   };
 
-  // ✅ FIXED OVERLAP CHECK - PROPER DATE COMPARISON
   const isOverlapping = (newFromStr, newToStr) => {
     if (!newFromStr || !newToStr) return false;
 
@@ -150,17 +137,13 @@ const TeamLeaderApplyLeave = () => {
     const newTo = new Date(newToStr);
 
     return requests.some((req) => {
-      // Skip if this is the request being edited
       if (editIndex !== null && req.id === requests[editIndex]?.id) {
         return false;
       }
-
-      // Skip if status is not Pending
       if (req.status !== "Pending") {
         return false;
       }
 
-      // Parse dates properly
       let from, to;
       
       if (req.from_date) {
@@ -179,34 +162,19 @@ const TeamLeaderApplyLeave = () => {
         return false;
       }
 
-      // Fix: Set time to midnight for accurate comparison
       from.setHours(0, 0, 0, 0);
       to.setHours(0, 0, 0, 0);
       newFrom.setHours(0, 0, 0, 0);
       newTo.setHours(0, 0, 0, 0);
 
-      // Check if ranges overlap
-      console.log("🔍 Checking overlap:", {
-        existingFrom: from.toISOString().split("T")[0],
-        existingTo: to.toISOString().split("T")[0],
-        newFrom: newFrom.toISOString().split("T")[0],
-        newTo: newTo.toISOString().split("T")[0]
-      });
-
-      const isOverlap = 
-        (newFrom >= from && newFrom <= to) ||  // New start is within existing range
-        (newTo >= from && newTo <= to) ||      // New end is within existing range
-        (newFrom <= from && newTo >= to);      // New range covers entire existing range
-
-      if (isOverlap) {
-        console.log("⚠️ Overlap detected!");
-      }
-
-      return isOverlap;
+      return (
+        (newFrom >= from && newFrom <= to) ||
+        (newTo >= from && newTo <= to) ||
+        (newFrom <= from && newTo >= to)
+      );
     });
   };
 
-  // ✅ SUBMIT - WITH OVERLAP CHECK (PAST DATES ALLOWED)
   const handleSubmit = async () => {
     if (!leaveType || !fromDate || !toDate || !reason) {
       alert("❌ Fill all fields");
@@ -226,13 +194,11 @@ const TeamLeaderApplyLeave = () => {
       return;
     }
 
-    // ✅ ENFORCE: no dates older than 15 days (future is allowed)
     if (isOutOfRange(fromDate) || isOutOfRange(toDate)) {
       alert(`❌ Dates cannot be earlier than ${minDateStr} (15 days in the past)`);
       return;
     }
 
-    // ✅ BLOCK WEEKEND START/END
     if (isWeekend(fromDate)) {
       alert("❌ Cannot apply leave starting on a weekend (Sat/Sun)");
       return;
@@ -243,13 +209,11 @@ const TeamLeaderApplyLeave = () => {
       return;
     }
 
-    // ✅ CHECK FOR OVERLAPPING LEAVES (FIXED)
     if (isOverlapping(fromDate, toDate)) {
       alert("❌ You already have a leave request during this period");
       return;
     }
 
-    // ✅ CHECK WORKING DAYS
     if (workingDays === 0) {
       alert("❌ Only weekends selected - no working days available");
       return;
@@ -273,8 +237,6 @@ const TeamLeaderApplyLeave = () => {
         reason: reason
       };
 
-      console.log("📤 Sending leave request:", payload);
-
       const response = await fetch(`${BACKEND_URL}/api/tl-leave/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -290,7 +252,6 @@ const TeamLeaderApplyLeave = () => {
 
       alert(`✅ ${data.message || "Leave applied successfully"}`);
 
-      // ✅ RESET FORM
       setSelectedDate(null);
       setFromDate("");
       setLeaveType("");
@@ -300,7 +261,6 @@ const TeamLeaderApplyLeave = () => {
       setEditIndex(null);
       setWorkingDays(0);
 
-      // REFRESH LEAVE REQUESTS
       fetchLeaveRequests();
 
     } catch (error) {
@@ -311,7 +271,6 @@ const TeamLeaderApplyLeave = () => {
     }
   };
 
-  // ✅ DELETE LEAVE REQUEST
   const handleDelete = async (index) => {
     const req = requests[index];
     
@@ -346,7 +305,6 @@ const TeamLeaderApplyLeave = () => {
     }
   };
 
-  // ✅ EDIT LEAVE REQUEST
   const handleEdit = (index) => {
     const req = requests[index];
 
@@ -370,7 +328,6 @@ const TeamLeaderApplyLeave = () => {
     setWorkingDays(days);
   };
 
-  // ✅ GET STATUS DISPLAY
   const getStatus = (req) => {
     const status = req.status;
     if (status === "Denied" || status === "Rejected") return "Rejected ❌";
@@ -387,7 +344,6 @@ const TeamLeaderApplyLeave = () => {
     <div className="leave-container">
       <h2>⏳ Team Leader Leave Management</h2>
 
-      {/* ✅ ALLOWED DATE RANGE BANNER */}
       <div style={{
         background: "#fff3cd", border: "1px solid #ffc107", borderRadius: "8px",
         padding: "10px 16px", marginBottom: "12px", fontSize: "14px", color: "#856404"
@@ -395,7 +351,6 @@ const TeamLeaderApplyLeave = () => {
         📅 You can apply leave from <strong>{minDateStr}</strong> (15 days ago) onwards — including <strong>future dates</strong>.
       </div>
 
-      {/* CALENDAR HEADER */}
       <div className="calendar-header">
         <button onClick={() => changeMonth("prev")}>◀</button>
         <h3>
@@ -405,7 +360,6 @@ const TeamLeaderApplyLeave = () => {
         <button onClick={() => changeMonth("next")}>▶</button>
       </div>
 
-      {/* DAYS OF WEEK */}
       <div className="calendar-days">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div key={d} className={d === "Sun" || d === "Sat" ? "weekend-header" : ""}>
@@ -414,7 +368,6 @@ const TeamLeaderApplyLeave = () => {
         ))}
       </div>
 
-      {/* CALENDAR GRID */}
       <div className="calendar-grid">
         {getDays().map((day, index) => {
           if (!day) return <div key={index} className="empty"></div>;
@@ -451,7 +404,6 @@ const TeamLeaderApplyLeave = () => {
         })}
       </div>
 
-      {/* MODAL - APPLY/EDIT LEAVE */}
       {selectedDate && (
         <div className="modal">
           <div className="modal-box">
@@ -504,7 +456,6 @@ const TeamLeaderApplyLeave = () => {
               disabled={loading}
             />
 
-            {/* ✅ DISPLAY WORKING DAYS */}
             {fromDate && toDate && (
               <div
                 className="working-days-display"
@@ -564,7 +515,6 @@ const TeamLeaderApplyLeave = () => {
         </div>
       )}
 
-      {/* LEAVE HISTORY TABLE */}
       <h3>📋 Your Leave History</h3>
 
       {loading && (
@@ -589,7 +539,6 @@ const TeamLeaderApplyLeave = () => {
         <tbody>
           {requests.length > 0 ? (
             requests.map((req, index) => {
-              // Filter by current user
               if (req.tl_user_id && req.tl_user_id !== currentUser.id)
                 return null;
 

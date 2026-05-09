@@ -8,8 +8,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaTasks, FaClock, FaFileAlt, FaHistory, FaChartBar } from "react-icons/fa";
 
-// ✅ FIX 1: Hardcoded to localhost — was pointing to LAN IP 192.168.0.165
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const EmployeeTimeSheets = () => {
   const [projects, setProjects]           = useState([]);
@@ -24,7 +23,6 @@ const EmployeeTimeSheets = () => {
   const [successMsg, setSuccessMsg]       = useState("");
   const [errorMsg, setErrorMsg]           = useState("");
 
-  // ✅ FIX 2: Read employee data from localStorage safely
   const currentUser = (() => {
     try {
       return JSON.parse(localStorage.getItem("user")) || {};
@@ -33,7 +31,6 @@ const EmployeeTimeSheets = () => {
     }
   })();
 
-  // ✅ FIX 3: employee_id is the display code (e.g. "ACS1001"), id is the numeric DB id
   const empNumericId  = currentUser.id || null;
   const empDisplayId  = currentUser.employee_id || currentUser.employeeId || currentUser.id || "N/A";
   const empName       = currentUser.name || "Employee";
@@ -47,18 +44,11 @@ const EmployeeTimeSheets = () => {
     description: "",
   });
 
-  // =========================================
-  // LOAD DATA
-  // =========================================
   const loadTimesheets = async () => {
     if (!empNumericId) return;
     setPageLoading(true);
     try {
-<<<<<<< HEAD
       const res  = await fetch(`${API_URL}/api/employee/my-timesheets/${empNumericId}`);
-=======
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/my-timesheets/${currentUser.id}`);
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       const data = await res.json();
       setTimesheets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -81,27 +71,11 @@ const EmployeeTimeSheets = () => {
     }
   };
 
-<<<<<<< HEAD
   useEffect(() => {
     loadTimesheets();
     loadProjects();
   }, [empNumericId]);
-=======
-  try {
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/employee/projects/${currentUser.id}`
-    );
-    const data = await res.json();
-    setProjects(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Project Fetch Error:", err);
-  }
-};
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
-  // =========================================
-  // HANDLERS
-  // =========================================
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -123,9 +97,6 @@ const EmployeeTimeSheets = () => {
     setTimeout(() => setErrorMsg(""), 5000);
   };
 
-  // =========================================
-  // WEEK HELPERS
-  // =========================================
   const getWeekNumber = (dateString) => {
     if (!dateString) return null;
     const d        = new Date(dateString);
@@ -143,9 +114,6 @@ const EmployeeTimeSheets = () => {
     return Array.from(weeks);
   };
 
-  // =========================================
-  // SUBMIT
-  // =========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitLoading) return;
@@ -174,13 +142,8 @@ const EmployeeTimeSheets = () => {
 
     setSubmitLoading(true);
     try {
-<<<<<<< HEAD
       const res = await fetch(`${API_URL}/api/employee/save-timesheet`, {
         method:  "POST",
-=======
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/save-timesheet`, {
-        method: "POST",
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(payload),
       });
@@ -216,9 +179,6 @@ const EmployeeTimeSheets = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // =========================================
-  // FILTER + SUMMARY
-  // =========================================
   const filteredData = timesheets.filter((t) => {
     const d = new Date(t.task_date);
     if (filter.year  && d.getFullYear()     !== Number(filter.year))  return false;
@@ -244,13 +204,9 @@ const EmployeeTimeSheets = () => {
     XLSX.writeFile(wb, "Timesheet_Report.xlsx");
   };
 
-  // =========================================
-  // RENDER
-  // =========================================
   return (
     <div className="ts-page">
 
-      {/* FULL-PAGE LOADER */}
       {pageLoading && (
         <div className="ts-loader">
           <div className="ts-loader__spinner" />
@@ -258,17 +214,14 @@ const EmployeeTimeSheets = () => {
         </div>
       )}
 
-      {/* PAGE HEADER */}
       <div className="ts-header">
         <h2>My Timesheets</h2>
         <p>Track, submit and review your daily work entries</p>
       </div>
 
-      {/* GLOBAL BANNERS */}
       {successMsg && <div className="ts-banner ts-banner--success">✅ {successMsg}</div>}
       {errorMsg   && <div className="ts-banner ts-banner--error">⚠️ {errorMsg}</div>}
 
-      {/* MAIN TABS */}
       <div className="ts-tabs">
         <button
           className={activeTab === "timesheets" ? "active" : ""}
@@ -284,10 +237,8 @@ const EmployeeTimeSheets = () => {
         </button>
       </div>
 
-      {/* ========= TIMESHEETS TAB ========= */}
       {activeTab === "timesheets" && (
         <>
-          {/* SUB TABS */}
           <div className="ts-subtabs">
             <button
               className={activeSubTab === "submit" ? "active" : ""}
@@ -309,22 +260,18 @@ const EmployeeTimeSheets = () => {
             </button>
           </div>
 
-          {/* ---- SUBMIT / EDIT FORM ---- */}
           {activeSubTab === "submit" && (
             <form className="ts-form" onSubmit={handleSubmit}>
 
-              {/* EMPLOYEE INFO */}
               <div className="ts-section">
                 <h3>Employee Details</h3>
                 <div className="ts-grid ts-grid--3">
                   <div className="ts-field">
                     <label>Employee Name</label>
-                    {/* ✅ FIX 4: Show name from localStorage */}
                     <input value={empName} disabled />
                   </div>
                   <div className="ts-field">
                     <label>Employee ID</label>
-                    {/* ✅ FIX 5: Show display code (e.g. ACS1001), fallback to numeric id */}
                     <input value={empDisplayId} disabled />
                   </div>
                   <div className="ts-field">
@@ -334,7 +281,6 @@ const EmployeeTimeSheets = () => {
                 </div>
               </div>
 
-              {/* TASK ENTRY */}
               <div className="ts-section">
                 <h3>Task Entry</h3>
                 <div className="ts-grid ts-grid--2">
@@ -428,7 +374,6 @@ const EmployeeTimeSheets = () => {
             </form>
           )}
 
-          {/* ---- HISTORY TAB ---- */}
           {activeSubTab === "weekly" && (
             <div className="ts-card">
               <div className="ts-filter-row">
@@ -495,7 +440,6 @@ const EmployeeTimeSheets = () => {
             </div>
           )}
 
-          {/* ---- SUMMARY TAB ---- */}
           {activeSubTab === "summary" && (
             <div className="ts-card">
               <div className="ts-filter-row">
@@ -555,7 +499,6 @@ const EmployeeTimeSheets = () => {
         </>
       )}
 
-      {/* ========= REPORTS TAB ========= */}
       {activeTab === "reports" && (
         <div className="ts-card ts-report">
           <FaFileAlt className="ts-report__icon" />

@@ -16,8 +16,7 @@ import {
 } from "react-icons/fa";
 import "./CreateUser.css";
 
-// ✅ FIX: Hardcoded API URL — no .env needed
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const CreateUser = () => {
   const [loading, setLoading] = useState(false);
@@ -40,18 +39,10 @@ const CreateUser = () => {
 
   const [departments, setDepartments] = useState([]);
 
-  // =========================================
-  // FETCH DEPARTMENTS
-  // =========================================
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-<<<<<<< HEAD
-        // ✅ FIX: Using hardcoded API_URL
         const response = await fetch(`${API_URL}/api/departments`);
-=======
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/departments`);
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         if (response.ok) {
           const data = await response.json();
           setDepartments(data);
@@ -66,20 +57,13 @@ const CreateUser = () => {
     fetchDepartments();
   }, []);
 
-  // =========================================
-  // HANDLE CHANGE
-  // =========================================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear field error on change
     if (errors[e.target.name]) {
       setErrors({ ...errors, [e.target.name]: "" });
     }
   };
 
-  // =========================================
-  // HANDLE PHONE
-  // =========================================
   const handlePhone = (e) => {
     let value = e.target.value;
     if (!value.startsWith("+91 ")) value = "+91 ";
@@ -88,9 +72,6 @@ const CreateUser = () => {
     if (errors.phone) setErrors({ ...errors, phone: "" });
   };
 
-  // =========================================
-  // VALIDATE
-  // =========================================
   const validate = () => {
     const newErrors = {};
     if (!form.firstName.trim()) newErrors.firstName = "Required";
@@ -109,9 +90,6 @@ const CreateUser = () => {
     return newErrors;
   };
 
-  // =========================================
-  // HANDLE SUBMIT
-  // =========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -123,16 +101,10 @@ const CreateUser = () => {
     }
 
     try {
-<<<<<<< HEAD
       setLoading(true);
       setErrors({});
 
-      // ✅ FIX: Using hardcoded API_URL
       const response = await fetch(`${API_URL}/api/users/create`, {
-=======
-      // SEND DATA TO BACKEND
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/create`, {
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -169,13 +141,11 @@ const CreateUser = () => {
     <div className="cu-container">
       <form className="cu-form" onSubmit={handleSubmit}>
 
-        {/* HEADER */}
         <div className="cu-header">
           <h2>Create Employee</h2>
           <p>Add a new member to your organization</p>
         </div>
 
-        {/* SUCCESS BANNER */}
         {success && (
           <div className="cu-banner cu-banner--success">
             <FaCheckCircle />
@@ -183,17 +153,14 @@ const CreateUser = () => {
           </div>
         )}
 
-        {/* ERROR BANNER */}
         {errors.submit && (
           <div className="cu-banner cu-banner--error">
             {errors.submit}
           </div>
         )}
 
-        {/* GRID FIELDS */}
         <div className="cu-grid">
 
-          {/* FIRST NAME */}
           <div className={`cu-field ${errors.firstName ? "cu-field--error" : ""}`}>
             <FaUser className="cu-field__icon" />
             <input
@@ -208,7 +175,6 @@ const CreateUser = () => {
             {errors.firstName && <span className="cu-field__msg">{errors.firstName}</span>}
           </div>
 
-          {/* LAST NAME */}
           <div className={`cu-field ${errors.lastName ? "cu-field--error" : ""}`}>
             <FaUser className="cu-field__icon" />
             <input
@@ -223,7 +189,6 @@ const CreateUser = () => {
             {errors.lastName && <span className="cu-field__msg">{errors.lastName}</span>}
           </div>
 
-          {/* EMPLOYEE ID */}
           <div className={`cu-field ${errors.employeeId ? "cu-field--error" : ""}`}>
             <FaIdBadge className="cu-field__icon" />
             <input
@@ -238,7 +203,6 @@ const CreateUser = () => {
             {errors.employeeId && <span className="cu-field__msg">{errors.employeeId}</span>}
           </div>
 
-          {/* EMAIL */}
           <div className={`cu-field ${errors.email ? "cu-field--error" : ""}`}>
             <FaEnvelope className="cu-field__icon" />
             <input
@@ -253,7 +217,6 @@ const CreateUser = () => {
             {errors.email && <span className="cu-field__msg">{errors.email}</span>}
           </div>
 
-          {/* PHONE — full width */}
           <div className={`cu-field cu-field--full ${errors.phone ? "cu-field--error" : ""}`}>
             <FaPhone className="cu-field__icon" />
             <input
@@ -269,7 +232,6 @@ const CreateUser = () => {
             {errors.phone && <span className="cu-field__msg">{errors.phone}</span>}
           </div>
 
-          {/* PASSWORD */}
           <div className={`cu-field ${errors.password ? "cu-field--error" : ""}`}>
             <FaLock className="cu-field__icon" />
             <input
@@ -292,7 +254,6 @@ const CreateUser = () => {
             {errors.password && <span className="cu-field__msg">{errors.password}</span>}
           </div>
 
-          {/* CONFIRM PASSWORD */}
           <div className={`cu-field ${errors.confirmPassword ? "cu-field--error" : ""}`}>
             <FaLock className="cu-field__icon" />
             <input
@@ -315,7 +276,6 @@ const CreateUser = () => {
             {errors.confirmPassword && <span className="cu-field__msg">{errors.confirmPassword}</span>}
           </div>
 
-          {/* ROLE */}
           <div className={`cu-select-wrap ${errors.role ? "cu-field--error" : ""}`}>
             <label className="cu-select-label">Role <span>*</span></label>
             <div className="cu-select-box">
@@ -330,7 +290,6 @@ const CreateUser = () => {
             {errors.role && <span className="cu-field__msg">{errors.role}</span>}
           </div>
 
-          {/* DEPARTMENT */}
           <div className={`cu-select-wrap ${errors.department ? "cu-field--error" : ""}`}>
             <label className="cu-select-label">Department <span>*</span></label>
             <div className="cu-select-box">
@@ -347,7 +306,6 @@ const CreateUser = () => {
 
         </div>
 
-        {/* SUBMIT */}
         <button type="submit" className="cu-submit" disabled={loading}>
           {loading ? <span className="cu-spinner" /> : null}
           {loading ? "Creating Employee..." : "Create Employee"}

@@ -334,17 +334,11 @@ class EmployeeController {
         }
     }
 
-<<<<<<< HEAD
-    // 9. PROJECTS — find projects where this employee is assigned
-    async getMyProjects(req, res) {
-        try {
-            const { empId } = req.params;
-=======
-   // 9. PROJECTS
+
+	// 9. PROJECTS — find projects where this employee is assigned
 	    async getMyProjects(req, res) {
 	        try {
 	            const { empId } = req.params;
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
 	            if (!empId) {
 	                return res.status(400).json({ error: "Employee ID is required" });
@@ -359,34 +353,10 @@ class EmployeeController {
 	                return res.json([]);
 	            }
 
-<<<<<<< HEAD
-            // The string ID (e.g., "ACS1001")
-            const empCode = String(userRows[0].employee_id).trim();
-
-            // UPDATED QUERY: Check managerId, teamLeaderId, AND employeeIds
-            const query = `
-                SELECT * FROM projects 
-                WHERE managerId = ? 
-                   OR teamLeaderId = ? 
-                   OR FIND_IN_SET(?, REPLACE(employeeIds, ' ', ''))
-                ORDER BY id DESC
-            `;
-
-            // Pass the appropriate variables to the ? placeholders in exact order
-            const [rows] = await db.execute(query, [empCode, empId, empCode]);
-            
-            res.json(rows || []);
-
-        } catch (error) {
-            console.error("Fetch Projects Error:", error.message);
-            res.status(500).json({ error: "Failed to fetch projects" });
-        }
-    }
-=======
 	            // The string ID (e.g., "ACS1001")
 	            const empCode = String(userRows[0].employee_id).trim();
 
-	            // UPDATED QUERY: Check managerId, teamLeaderId, AND employeeIds
+	            // Check managerId, teamLeaderId, AND employeeIds
 	            const query = `
 	                SELECT * FROM projects 
 	                WHERE managerId = ? 
@@ -395,17 +365,16 @@ class EmployeeController {
 	                ORDER BY id DESC
 	            `;
 
-	            // Pass the appropriate variables to the ? placeholders in exact order
 	            const [rows] = await db.execute(query, [empCode, empId, empCode]);
 	            
 	            res.json(rows || []);
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
 
 	        } catch (error) {
 	            console.error("Fetch Projects Error:", error.message);
 	            res.status(500).json({ error: "Failed to fetch projects" });
 	        }
 	    }
+		
     // 10. SAVE / SUBMIT TIMESHEET
     async saveTimesheet(req, res) {
         try {
@@ -502,6 +471,7 @@ class EmployeeController {
             res.status(500).json({ error: "Failed to submit timesheet" });
         }
     }
-}
+	}
+
 
 module.exports = new EmployeeController();

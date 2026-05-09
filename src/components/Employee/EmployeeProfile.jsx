@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./EmployeeProfile.css";
 import { FaEdit, FaSave } from "react-icons/fa";
 
+// ✅ FIX: Added Safe API_URL
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const EmployeeProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [edit, setEdit] = useState(false);
@@ -17,20 +20,19 @@ const EmployeeProfile = () => {
   const [data, setData] = useState({});
   const [user, setUser] = useState(null);
 
-  // Helper to format date for the input field (YYYY-MM-DD)
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return dateString.split("T")[0];
   };
 
-  // ✅ 1. FETCH PROFILE FROM DATABASE ON LOAD
   useEffect(() => {
     const fetchProfile = async () => {
       const loggedUser = JSON.parse(localStorage.getItem("user")) || {};
       if (!loggedUser.id) return;
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/profile/${loggedUser.id}`);
+        // ✅ FIX: Using safe API_URL
+        const response = await fetch(`${API_URL}/api/employee/profile/${loggedUser.id}`);
         const dbData = await response.json();
 
         if (response.ok) {
@@ -39,7 +41,6 @@ const EmployeeProfile = () => {
             ...dbData,
             dob: formatDate(dbData.dob),
             doj: formatDate(dbData.doj),
-            // Ensure fields match frontend naming conventions
             altPhone: dbData.altPhone || dbData.alt_phone || ""
           });
           setImage(dbData.photo || dbData.profile_photo || null);
@@ -55,12 +56,10 @@ const EmployeeProfile = () => {
     fetchProfile();
   }, []);
 
-  // INPUT CHANGE
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
-  // IMAGE UPLOAD (Base64 for profile photo)
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
@@ -68,7 +67,6 @@ const EmployeeProfile = () => {
     if (file) reader.readAsDataURL(file);
   };
 
-  // DOCUMENT UPLOAD
   const handleDocUpload = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -83,7 +81,6 @@ const EmployeeProfile = () => {
     localStorage.setItem(`documents_${user.id}`, JSON.stringify(updatedDocs));
   };
 
-  // ✅ 2. SAVE PROFILE TO DATABASE
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
@@ -96,12 +93,13 @@ const EmployeeProfile = () => {
         address: data.address,
         gender: data.gender,
         dob: data.dob,
-        altPhone: data.altPhone, // Maps to alt_phone in DB
+        altPhone: data.altPhone,
         bloodGroup: data.bloodGroup,
         photo: image 
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/update-profile`, {
+      // ✅ FIX: Using safe API_URL
+      const response = await fetch(`${API_URL}/api/employee/update-profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -113,7 +111,6 @@ const EmployeeProfile = () => {
         const updatedUser = { ...user, ...data, photo: image };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         
-        // Notify Sidebar/Topbar to update
         window.dispatchEvent(new Event("userUpdated"));
 
         setUser(updatedUser);
@@ -132,7 +129,6 @@ const EmployeeProfile = () => {
 
   return (
     <div className="profile-page">
-      {/* HEADER */}
       <div className="profile-header">
         <div className="profile-left">
           <div className="profile-img-wrapper">
@@ -157,7 +153,6 @@ const EmployeeProfile = () => {
         </button>
       </div>
 
-      {/* TABS */}
       <div className="tabs">
         <button onClick={() => setActiveTab("overview")} className={activeTab === "overview" ? "active" : ""}>Overview</button>
         <button onClick={() => setActiveTab("documents")} className={activeTab === "documents" ? "active" : ""}>Documents</button>
@@ -210,7 +205,6 @@ const EmployeeProfile = () => {
           </div>
         )}
 
-        {/* DOCUMENTS */}
         {activeTab === "documents" && (
           <div className="form-grid">
             {["aadhar", "pan", "certificate"].map(type => (

@@ -4,6 +4,9 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Login.css";
 import bg from "./assets/bgimage.jpg"; 
 
+// ✅ FIX: Added a safe fallback so the URL never becomes "undefined"
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const Login = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
 
@@ -35,11 +38,11 @@ const Login = ({ setIsLoggedIn }) => {
     try {
       localStorage.removeItem("user");
 
-      // Create abort controller for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); 
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
+      // ✅ FIX: Using the safe API_URL constant
+      const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +53,6 @@ const Login = ({ setIsLoggedIn }) => {
 
       clearTimeout(timeoutId);
 
-      // Check if response is ok
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || `Server error: ${response.status}`);
@@ -78,15 +80,10 @@ const Login = ({ setIsLoggedIn }) => {
     } catch (err) {
       console.error("Login Error:", err);
 
-      // Handle different error types
       if (err.name === "AbortError") {
-        setError(
-          `Connection timeout. Please check if backend server is running on ${
-            process.env.REACT_APP_API_URL || "your configured API URL"
-          }`
-        );
+        setError(`Connection timeout. Please check if backend server is running on ${API_URL}`);
       } else if (err instanceof TypeError) {
-        setError("Cannot reach server. Make sure:\n1. Backend is running\n2. IP address is correct\n3. Firewall allows port 5000");
+        setError(`Cannot reach server. Make sure:\n1. Backend is running at ${API_URL}\n2. Firewall allows connection`);
       } else {
         setError(err.message || "Unable to connect to server. Ensure backend is running.");
       }

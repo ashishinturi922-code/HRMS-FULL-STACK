@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "./EmployeeProjects.css";
 
+// ✅ FIX: Added Safe API_URL
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const EmployeeProjects = () => {
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    // ✅ USER (KEEP THIS)
     let storedUser = JSON.parse(localStorage.getItem("user"));
 
     if (!storedUser) {
@@ -16,11 +18,11 @@ const EmployeeProjects = () => {
       };
     }
 
-    // ✅ FETCH FROM BACKEND (REPLACED LOCAL STORAGE LOGIC)
     const fetchProjects = async () => {
       try {
+        // ✅ FIX: Using safe API_URL
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/employee/projects/${storedUser.id}`
+          `${API_URL}/api/employee/projects/${storedUser.id}`
         );
         const data = await res.json();
 
@@ -33,19 +35,16 @@ const EmployeeProjects = () => {
     fetchProjects();
   }, []);
 
-  // 🔍 SEARCH (SAFE FIX)
   const filteredProjects = projects.filter((p) =>
     (p.projectName || p.name || "")
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  // 🔄 CHANGE STATUS (ONLY FRONTEND UPDATE)
   const handleStatusChange = (projectId, status) => {
     const updated = projects.map((p) =>
       p.id === projectId ? { ...p, status } : p
     );
-
     setProjects(updated);
   };
 
@@ -53,7 +52,6 @@ const EmployeeProjects = () => {
     <div className="projects-container">
       <h2>My Projects</h2>
 
-      {/* SEARCH */}
       <div className="search-bar">
         <input
           type="text"
@@ -63,7 +61,6 @@ const EmployeeProjects = () => {
         />
       </div>
 
-      {/* TABLE */}
       <div className="projects-card">
         <h3>Assigned Projects</h3>
 
@@ -84,17 +81,13 @@ const EmployeeProjects = () => {
                 filteredProjects.map((p, index) => (
                   <tr key={p.id}>
                     <td>{index + 1}</td>
-
-                    {/* ✅ FIXED FOR DB */}
                     <td>{p.projectName || p.name}</td>
                     <td>{p.projectDescription || p.description}</td>
-
                     <td>
                       <span className={`status ${p.status.toLowerCase()}`}>
                         {p.status}
                       </span>
                     </td>
-
                     <td>
                       <select
                         value={p.status}
@@ -116,7 +109,6 @@ const EmployeeProjects = () => {
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
       </div>

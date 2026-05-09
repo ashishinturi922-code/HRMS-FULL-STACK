@@ -13,8 +13,7 @@ import {
   FaTimes
 } from "react-icons/fa";
 
-// ✅ FIX: Use localhost instead of hardcoded LAN IP
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const DashboardHome = () => {
 
@@ -41,12 +40,7 @@ const DashboardHome = () => {
   };
 
   useEffect(() => {
-<<<<<<< HEAD
-    // ✅ FIX: Use API_URL constant
     fetch(`${API_URL}/api/admin/stats`)
-=======
-    fetch(`${process.env.REACT_APP_API_URL}/api/admin/stats`)
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
       .then(res => res.json())
       .then(data => {
          setDashboardData(prevState => ({
@@ -66,18 +60,11 @@ const DashboardHome = () => {
   const fetchLeaveEmployees = () => {
     setLoadingLeave(true);
     const today = new Date().toISOString().split('T')[0];
-<<<<<<< HEAD
-
-    // ✅ FIX: Use API_URL constant
-    fetch(`${API_URL}/api/admin/leave-today?date=${today}`)
-=======
     
-    fetch(`${process.env.REACT_APP_API_URL}/api/admin/leave-today?date=${today}`)
->>>>>>> 8123286f8c8411ce164d7e89a3eaee37521f5a5d
+    fetch(`${API_URL}/api/admin/leave-today?date=${today}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);
-        // ✅ FIX: AdminController now returns { employees: [] } shape (was returning flat array)
         setLeaveEmployees(data.employees || []);
         setLoadingLeave(false);
       })
@@ -99,13 +86,11 @@ const DashboardHome = () => {
 
       <div className="dashboard-wrapper">
 
-        {/* ===== GREETING ===== */}
         <div className="greeting-card">
           <h2>{getGreeting()}, {dashboardData.adminName} 👋</h2>
           <p>Welcome back to your HRMS dashboard</p>
         </div>
 
-        {/* ===== STATS ===== */}
         <div className="stats-container">
 
           <div className="stat-card employees">
@@ -154,7 +139,6 @@ const DashboardHome = () => {
 
         </div>
 
-        {/* ===== CHART ===== */}
         <div className="chart-card">
           <h3>Attendance Overview</h3>
 
@@ -181,7 +165,6 @@ const DashboardHome = () => {
 
       </div>
 
-      {/* ===== LEAVE MODAL ===== */}
       {showLeaveModal && (
         <div className="modal-overlay">
           <div className="modal-content">
