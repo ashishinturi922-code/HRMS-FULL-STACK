@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import "./EmployeeApplyLeave.css";
-
-const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const EmployeeApplyLeave = () => {
   const currentUser = JSON.parse(localStorage.getItem("user")) || {
@@ -23,13 +22,22 @@ const EmployeeApplyLeave = () => {
   const [loading, setLoading] = useState(false);
   const [workingDays, setWorkingDays] = useState(0);
 
+  // ✅ FIX: Safe Date Parser to prevent the 1-Day Timezone Shift Bug
+  const parseDateLocal = (dateStr) => {
+    if (!dateStr) return null;
+    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+    const [yyyy, mm, dd] = cleanDate.split('-');
+    return new Date(yyyy, mm - 1, dd);
+  };
+
   // ✅ DATE WINDOW: up to 15 days in the past, unlimited future
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const minAllowedDate = new Date(today);
   minAllowedDate.setDate(today.getDate() - 15);
 
-  const minDateStr = minAllowedDate.toISOString().split("T")[0];
+  // ✅ FIX: Generate minDateStr locally, not using toISOString (which uses UTC)
+  const minDateStr = `${minAllowedDate.getFullYear()}-${String(minAllowedDate.getMonth() + 1).padStart(2, '0')}-${String(minAllowedDate.getDate()).padStart(2, '0')}`;
 
   const leaveOptions = [
     "Sick Leave", "Casual Leave", "Work From Home (WFH)",
@@ -37,23 +45,25 @@ const EmployeeApplyLeave = () => {
   ];
 
   const isWeekend = (dateStr) => {
-    if (!dateStr) return false;
-    const day = new Date(dateStr).getDay();
+    const d = parseDateLocal(dateStr);
+    if (!d) return false;
+    const day = d.getDay();
     return day === 0 || day === 6;
   };
 
   const isOutOfRange = (dateStr) => {
-    if (!dateStr) return false;
-    const d = new Date(dateStr);
+    const d = parseDateLocal(dateStr);
+    if (!d) return false;
     d.setHours(0, 0, 0, 0);
     return d < minAllowedDate; 
   };
 
-  const calculateWorkingDays = (start, end) => {
-    if (!start || !end) return 0;
+  const calculateWorkingDays = (startStr, endStr) => {
+    const current = parseDateLocal(startStr);
+    const endDate = parseDateLocal(endStr);
+    if (!current || !endDate) return 0;
+    
     let count = 0;
-    let current = new Date(start);
-    const endDate = new Date(end);
     while (current <= endDate) {
       const day = current.getDay();
       if (day !== 0 && day !== 6) count++;
@@ -74,7 +84,8 @@ const EmployeeApplyLeave = () => {
     if (!currentUser.id) return;
     try {
       setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/employee/leaves/${currentUser.id}`);
+      // ✅ FIX: Use API_URL from config
+      const response = await fetch(`${API_URL}/api/employee/leaves/${currentUser.id}`);
       const data = await response.json();
       if (response.ok) {
         setRequests(data);
@@ -110,22 +121,17 @@ const EmployeeApplyLeave = () => {
   };
 
   const isOverlapping = (newFromStr, newToStr) => {
-    if (!newFromStr || !newToStr) return false;
-    const newFrom = new Date(newFromStr);
-    const newTo = new Date(newToStr);
+    const newFrom = parseDateLocal(newFromStr);
+    const newTo = parseDateLocal(newToStr);
+    if (!newFrom || !newTo) return false;
+
     return requests.some((req) => {
       if (!['Pending', 'TL Approved'].includes(req.status)) return false;
-      let from, to;
-      if (req.from_date) from = new Date(req.from_date);
-      else if (req.fromDate) from = new Date(req.fromDate);
-      else return false;
-      if (req.to_date) to = new Date(req.to_date);
-      else if (req.toDate) to = new Date(req.toDate);
-      else return false;
-      from.setHours(0, 0, 0, 0);
-      to.setHours(0, 0, 0, 0);
-      newFrom.setHours(0, 0, 0, 0);
-      newTo.setHours(0, 0, 0, 0);
+      
+      const from = parseDateLocal(req.from_date || req.fromDate);
+      const to = parseDateLocal(req.to_date || req.toDate);
+      if (!from || !to) return false;
+      
       return (
         (newFrom >= from && newFrom <= to) ||
         (newTo >= from && newTo <= to) ||
@@ -143,8 +149,8 @@ const EmployeeApplyLeave = () => {
       alert("❌ Select session");
       return;
     }
-    const newFrom = new Date(fromDate);
-    const newTo = new Date(toDate);
+    const newFrom = parseDateLocal(fromDate);
+    const newTo = parseDateLocal(toDate);
     if (newFrom > newTo) {
       alert("❌ Invalid date range");
       return;
@@ -186,7 +192,8 @@ const EmployeeApplyLeave = () => {
         days: finalDays
       };
 
-      const response = await fetch(`${BACKEND_URL}/api/employee/apply-leave`, {
+      // ✅ FIX: Use API_URL from config
+      const response = await fetch(`${API_URL}/api/employee/apply-leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -219,7 +226,8 @@ const EmployeeApplyLeave = () => {
     if (!window.confirm("Are you sure you want to cancel this leave request?")) return;
     try {
       setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/employee/delete-leave/${leaveId}`, {
+      // ✅ FIX: Use API_URL from config
+      const response = await fetch(`${API_URL}/api/employee/delete-leave/${leaveId}`, {
         method: "DELETE"
       });
       if (response.ok) {
@@ -352,7 +360,7 @@ const EmployeeApplyLeave = () => {
             <input
               type="date"
               value={toDate}
-              min={minDateStr}
+              min={fromDate || minDateStr} 
               onChange={(e) => setToDate(e.target.value)}
               disabled={loading}
             />
@@ -435,7 +443,7 @@ const EmployeeApplyLeave = () => {
               <tr key={index}>
                 <td>{req.leave_type}{req.session && ` (${req.session})`}</td>
                 <td>
-                  {new Date(req.from_date).toLocaleDateString()} → {new Date(req.to_date).toLocaleDateString()}
+                  {parseDateLocal(req.from_date || req.fromDate)?.toLocaleDateString()} → {parseDateLocal(req.to_date || req.toDate)?.toLocaleDateString()}
                 </td>
                 <td style={{ fontWeight: "bold", textAlign: "center" }}>{req.days}</td>
                 <td>{req.reason}</td>

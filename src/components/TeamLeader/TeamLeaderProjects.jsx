@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import "./TeamLeaderProjects.css";
 
 const TeamLeaderProjects = () => {
@@ -11,13 +12,15 @@ const TeamLeaderProjects = () => {
   // ✅ FETCH PROJECTS AND EMPLOYEES
   const fetchData = async () => {
     try {
+      // ✅ FIX: Using API_URL instead of process.env
       const projRes = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/teamleader/projects/${currentUser?.id}`
+        `${API_URL}/api/teamleader/projects/${currentUser?.id}`
       );
       const projData = await projRes.json();
 
+      // ✅ FIX: Using API_URL instead of process.env
       const empRes = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/teamleader/my-team/${currentUser?.id}`
+        `${API_URL}/api/teamleader/my-team/${currentUser?.id}`
       );
       const empData = await empRes.json();
 
@@ -42,8 +45,9 @@ const TeamLeaderProjects = () => {
   // 🔄 STATUS UPDATE
   const handleStatusChange = async (projectId, status) => {
     try {
+      // ✅ FIX: Using API_URL instead of process.env
       await fetch(
-        `${process.env.REACT_APP_API_URL}/api/manager/projects/status/${projectId}`,
+        `${API_URL}/api/manager/projects/status/${projectId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ManagerTimeSheets.css";
 import * as XLSX from "xlsx";
 import { FaTasks, FaClock, FaEye, FaCheck, FaTimes, FaUsers, FaSearch } from "react-icons/fa";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const ManagerTimeSheets = () => {
   const [activeTab, setActiveTab] = useState("timesheets");
@@ -64,7 +65,8 @@ const ManagerTimeSheets = () => {
   // --- FETCH DATA ---
   const loadTimesheets = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/all-timesheets`);
+      // ✅ FIX: Using imported API_URL
+      const res = await fetch(`${API_URL}/api/manager/all-timesheets`);
       const data = await res.json();
       setTimesheets(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -74,8 +76,9 @@ const ManagerTimeSheets = () => {
 
   const loadTLTimesheets = async () => {
     try {
+      // ✅ FIX: Using imported API_URL
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/manager/team-leads-timesheets/${currentUser?.id}`
+        `${API_URL}/api/manager/team-leads-timesheets/${currentUser?.id}`
       );
       const data = await res.json();
       setTlTimesheets(Array.isArray(data) ? data : []);
@@ -88,8 +91,9 @@ const ManagerTimeSheets = () => {
   // ✅ NEW: LOAD MANAGER'S PROJECTS
   const loadManagerProjects = async () => {
     try {
+      // ✅ FIX: Using imported API_URL
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/manager/projects/${currentUser?.id}`
+        `${API_URL}/api/manager/projects/${currentUser?.id}`
       );
       const data = await res.json();
       setManagerProjects(Array.isArray(data) ? data : []);
@@ -139,7 +143,8 @@ const ManagerTimeSheets = () => {
       task_date: formData.taskDate 
     };
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/save-timesheet`, {
+      // ✅ FIX: Using imported API_URL
+      const res = await fetch(`${API_URL}/api/manager/save-timesheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -157,7 +162,8 @@ const ManagerTimeSheets = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/timesheets/status/${id}`, {
+      // ✅ FIX: Using imported API_URL
+      const res = await fetch(`${API_URL}/api/manager/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
@@ -173,8 +179,9 @@ const ManagerTimeSheets = () => {
   // ✅ APPROVE TEAM LEAD TIMESHEET
   const handleApproveTLTimesheet = async (timesheetId, status) => {
     try {
+      // ✅ FIX: Using imported API_URL
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/manager/approve-timesheet/${timesheetId}`,
+        `${API_URL}/api/manager/approve-timesheet/${timesheetId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

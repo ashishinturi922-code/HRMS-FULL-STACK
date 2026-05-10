@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./TeamLeaderDashboardHome.css";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
@@ -41,7 +42,8 @@ const DashboardHome = () => {
       if (!user || !user.id) return;
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/stats/${user.id}`);
+        // ✅ FIX: Replaced broken env variable with API_URL
+        const response = await fetch(`${API_URL}/api/teamleader/stats/${user.id}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -78,9 +80,13 @@ const DashboardHome = () => {
   const fetchLeaveEmployees = () => {
     setLoadingLeave(true);
     const user = JSON.parse(localStorage.getItem("user"));
-    const today = new Date().toISOString().split('T')[0];
     
-    fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/leave-today?date=${today}&tlId=${user.id}`)
+    // ✅ FIX: Construct local date to prevent the UTC timezone shift bug
+    const todayObj = new Date();
+    const today = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+    
+    // ✅ FIX: Replaced broken env variable with API_URL
+    fetch(`${API_URL}/api/teamleader/leave-today?date=${today}&tlId=${user.id}`)
       .then(res => res.json())
       .then(data => {
         console.log("Leave employees data:", data);

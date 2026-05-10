@@ -3,6 +3,7 @@ import "./TeamLeaderTimeSheets.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaEye, FaCheck, FaTimes, FaTasks, FaClock } from "react-icons/fa";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const TeamLeaderTimeSheets = () => {
   const [activeTab, setActiveTab] = useState("timesheets");
@@ -41,10 +42,12 @@ const TeamLeaderTimeSheets = () => {
 
   const loadTimesheets = async () => {
     try {
-      const resPending = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/timesheets/pending/${currentUser.id}`);
+      // ✅ FIX: Using API_URL instead of process.env
+      const resPending = await fetch(`${API_URL}/api/teamleader/timesheets/pending/${currentUser.id}`);
       const teamData = await resPending.json();
       
-      const resMy = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/my-timesheets/${currentUser.id}`);
+      // ✅ FIX: Using API_URL instead of process.env
+      const resMy = await fetch(`${API_URL}/api/teamleader/my-timesheets/${currentUser.id}`);
       const myData = await resMy.json();
 
       const safeTeamData = Array.isArray(teamData) ? teamData : [];
@@ -65,7 +68,8 @@ const TeamLeaderTimeSheets = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/timesheets/status/${id}`, {
+      // ✅ FIX: Using API_URL instead of process.env
+      const res = await fetch(`${API_URL}/api/teamleader/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
@@ -83,19 +87,20 @@ const TeamLeaderTimeSheets = () => {
   };
 
   const loadProjects = async () => {
-  if (!currentUser?.id) return;
+    if (!currentUser?.id) return;
 
-  try {
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/teamleader/projects/${currentUser.id}`
-    );
-    const data = await res.json();
+    try {
+      // ✅ FIX: Using API_URL instead of process.env
+      const res = await fetch(
+        `${API_URL}/api/teamleader/projects/${currentUser.id}`
+      );
+      const data = await res.json();
 
-    setProjects(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Project Fetch Error:", err);
-  }
-};
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Project Fetch Error:", err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -135,14 +140,14 @@ const TeamLeaderTimeSheets = () => {
     }
 
     const today = new Date();
-const selected = new Date(formData.taskDate);
+    const selected = new Date(formData.taskDate);
 
-const format = (d) => d.toISOString().split("T")[0];
+    const format = (d) => d.toISOString().split("T")[0];
 
-if (format(selected) > format(today)) {
-  alert("You cannot submit future timesheets");
-  return;
-}
+    if (format(selected) > format(today)) {
+      alert("You cannot submit future timesheets");
+      return;
+    }
 
     const payload = {
         id: editId,
@@ -155,7 +160,8 @@ if (format(selected) > format(today)) {
     };
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/save-timesheet`, {
+      // ✅ FIX: Using API_URL instead of process.env
+      const res = await fetch(`${API_URL}/api/teamleader/save-timesheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -251,21 +257,20 @@ if (format(selected) > format(today)) {
                 <h3>Task Details</h3>
                 <div className="grid-2">
                   <input
-  type="date"
-  name="taskDate"
-  value={formData.taskDate}
-  onChange={handleChange}
-  max={new Date().toISOString().split("T")[0]}
-/>
+                    type="date"
+                    name="taskDate"
+                    value={formData.taskDate}
+                    onChange={handleChange}
+                    max={new Date().toISOString().split("T")[0]}
+                  />
                   <select name="project" value={formData.project} onChange={handleChange}>
-  <option value="">Select Project</option>
-
-  {projects.map((p) => (
-    <option key={p.id} value={p.projectName || p.name}>
-      {p.projectName || p.name}
-    </option>
-  ))}
-</select>
+                    <option value="">Select Project</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.projectName || p.name}>
+                        {p.projectName || p.name}
+                      </option>
+                    ))}
+                  </select>
                   <input name="task" value={formData.task} onChange={handleChange} placeholder="Task" />
                   <input type="number" name="hours" value={formData.hours} onChange={handleChange} placeholder="Hours" />
                 </div>
@@ -361,20 +366,20 @@ if (format(selected) > format(today)) {
                   <td>
                     {t.status === "Pending" ? (
                       <>
-  <button
-    className="approve-btn"
-    onClick={() => handleStatusChange(t.id, "Approved")}
-  >
-    Approve
-  </button>
+                        <button
+                          className="approve-btn"
+                          onClick={() => handleStatusChange(t.id, "Approved")}
+                        >
+                          Approve
+                        </button>
 
-  <button
-    className="reject-btn"
-    onClick={() => handleStatusChange(t.id, "Rejected")}
-  >
-    Deny
-  </button>
-</>
+                        <button
+                          className="reject-btn"
+                          onClick={() => handleStatusChange(t.id, "Rejected")}
+                        >
+                          Deny
+                        </button>
+                      </>
                     ) : (
                       <span style={{color: t.status === "Approved" ? "green" : "red", fontWeight: "bold"}}>{t.status}</span>
                     )}

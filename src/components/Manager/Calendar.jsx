@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios"; // Using axios for consistency with your other components
+import axios from "axios"; 
+import API_URL from "../../apiConfig"; 
 import "./Calendar.css";
 
 const ManagerCalendar = () => {
@@ -12,7 +13,7 @@ const ManagerCalendar = () => {
   // ✅ LOAD EVENTS FROM BACKEND DATABASE
   const fetchCalendarEvents = useCallback(async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/manager/calendar`);
+      const response = await axios.get(`${API_URL}/api/manager/calendar`);
       const data = response.data;
 
       // Transform the database array into a date-keyed object for the grid
@@ -21,7 +22,9 @@ const ManagerCalendar = () => {
         const rawDate = event.date_key || event.event_date;
         if (!rawDate) return;
         
-        const dateKey = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate; 
+        // ✅ FIX: Parse the date into a real Date object to prevent timezone shifting (the 1-day bug)
+        const d = new Date(rawDate);
+        const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         
         if (!eventMap[dateKey]) {
           eventMap[dateKey] = [];
@@ -31,9 +34,8 @@ const ManagerCalendar = () => {
           id: event.id,
           title: event.title,
           description: event.description,
-          startTime: event.start_time,
-          endTime: event.end_time,
           category: event.category
+          // ✅ FIX: Removed startTime and endTime logic as requested
         });
       });
 
@@ -164,7 +166,7 @@ const ManagerCalendar = () => {
                     <div className={`category-tag ${e.category?.toLowerCase() || 'event'}`}>{e.category || 'General'}</div>
                     <strong>{e.title}</strong>
                     <p className="desc">{e.description || 'No description provided.'}</p>
-                    <p className="time">🕒 {e.startTime} - {e.endTime}</p>
+                    {/* ✅ FIX: Time display section has been entirely removed from here */}
                   </div>
                 ))
               ) : (

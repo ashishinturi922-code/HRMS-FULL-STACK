@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import "./ManagerLeaveApprovals.css";
 
 const ManagerLeaveApprovals = () => {
@@ -18,12 +19,11 @@ const ManagerLeaveApprovals = () => {
   const [managerReason, setManagerReason] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
-
   // ✅ FETCH EMPLOYEE LEAVES
   const fetchEmployeeLeaves = useCallback(async () => {
     try {
-      const res = await axios.get(`${BACKEND_URL}/api/manager/pending-approvals`);
+      // ✅ FIX: Replaced broken env variable with API_URL
+      const res = await axios.get(`${API_URL}/api/manager/pending-approvals`);
       
       // The logic here ensures the Manager sees:
       // 1. Employee leaves that are 'TL Approved' (which means they were > 2 days)
@@ -42,8 +42,9 @@ const ManagerLeaveApprovals = () => {
   // ✅ FETCH TEAM LEADER LEAVES
   const fetchTeamLeaderLeaves = useCallback(async () => {
     try {
+      // ✅ FIX: Replaced broken env variable with API_URL
       const res = await axios.get(
-        `${BACKEND_URL}/api/tl-leave/requests/${currentUser.id}`
+        `${API_URL}/api/tl-leave/requests/${currentUser.id}`
       );
 
       setTlLeaves(res.data);
@@ -61,7 +62,8 @@ const ManagerLeaveApprovals = () => {
   const handleApproveEmployee = async (leaveId) => {
     try {
       setLoading(true);
-      await axios.put(`${BACKEND_URL}/api/manager/approve-leave/${leaveId}`, {
+      // ✅ FIX: Replaced broken env variable with API_URL
+      await axios.put(`${API_URL}/api/manager/approve-leave/${leaveId}`, {
         status: "Approved"
       });
       alert("Leave Approved ✅");
@@ -82,7 +84,8 @@ const ManagerLeaveApprovals = () => {
 
     try {
       setLoading(true);
-      await axios.put(`${BACKEND_URL}/api/manager/approve-leave/${leaveId}`, {
+      // ✅ FIX: Replaced broken env variable with API_URL
+      await axios.put(`${API_URL}/api/manager/approve-leave/${leaveId}`, {
         status: "Rejected",
         reason: rejectReason
       });
@@ -111,8 +114,9 @@ const ManagerLeaveApprovals = () => {
 
     try {
       setLoading(true);
+      // ✅ FIX: Replaced broken env variable with API_URL
       const response = await axios.put(
-        `${BACKEND_URL}/api/tl-leave/approve/${selectedLeave.id}`,
+        `${API_URL}/api/tl-leave/approve/${selectedLeave.id}`,
         {
           status: approvalStatus,
           manager_reason: managerReason || null
@@ -290,8 +294,8 @@ const ManagerLeaveApprovals = () => {
                   <td>
                     {leave.leave_type} {leave.session && `(${leave.session})`}
                   </td>
-                  <td>{leave.from_date}</td>
-                  <td>{leave.to_date}</td>
+                  <td>{new Date(leave.from_date).toLocaleDateString()}</td>
+                  <td>{new Date(leave.to_date).toLocaleDateString()}</td>
                   <td>{leave.days}</td>
                   <td>{leave.reason}</td>
                   <td>
@@ -350,8 +354,8 @@ const ManagerLeaveApprovals = () => {
             <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#f9f9f9", borderRadius: "5px" }}>
               <p><strong>Team Leader:</strong> {selectedLeave.tl_name}</p>
               <p><strong>Leave Type:</strong> {selectedLeave.leave_type} {selectedLeave.session && `(${selectedLeave.session})`}</p>
-              <p><strong>From:</strong> {selectedLeave.from_date}</p>
-              <p><strong>To:</strong> {selectedLeave.to_date}</p>
+              <p><strong>From:</strong> {new Date(selectedLeave.from_date).toLocaleDateString()}</p>
+              <p><strong>To:</strong> {new Date(selectedLeave.to_date).toLocaleDateString()}</p>
               <p><strong>Days:</strong> {selectedLeave.days}</p>
               <p><strong>Reason:</strong> {selectedLeave.reason}</p>
             </div>

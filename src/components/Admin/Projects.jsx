@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Projects.css";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import {
   FaPlus,
   FaEye,
@@ -33,8 +34,8 @@ const Projects = () => {
   const fetchData = async () => {
     try {
       const [projRes, empRes] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/api/projects`),
-        fetch(`${process.env.REACT_APP_API_URL}/api/employees`)
+        fetch(`${API_URL}/api/projects`), // ✅ FIX: Using API_URL
+        fetch(`${API_URL}/api/employees`) // ✅ FIX: Using API_URL
       ]);
       const projData = await projRes.json();
       const empData = await empRes.json();
@@ -71,7 +72,7 @@ const Projects = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/create`, {
+      const response = await fetch(`${API_URL}/api/projects/create`, { // ✅ FIX: Using API_URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,7 +94,7 @@ const Projects = () => {
   /* UPDATE STATUS (Complete Project) */
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/${id}/status`, {
+      const response = await fetch(`${API_URL}/api/projects/${id}/status`, { // ✅ FIX: Using API_URL
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -108,7 +109,7 @@ const Projects = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this project?")) return;
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/projects/${id}`, {
+      const response = await fetch(`${API_URL}/api/projects/${id}`, { // ✅ FIX: Using API_URL
         method: "DELETE"
       });
       if (response.ok) fetchData();

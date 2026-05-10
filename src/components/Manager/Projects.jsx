@@ -13,7 +13,9 @@ const ManagerProjects = () => {
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [searchInput, setSearchInput] = useState("");
 
-  const BACKEND_URL = "http://192.168.0.165:5000";
+  // ✅ FIX: Changed hardcoded IP to localhost to prevent timeout errors. 
+  // If you need to test on a mobile phone, use an environment variable like REACT_APP_BACKEND_URL
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
   // ✅ FETCH DATA FROM DATABASE
   const fetchProjectData = useCallback(async () => {
@@ -57,7 +59,7 @@ const ManagerProjects = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [BACKEND_URL]); // Added BACKEND_URL to dependencies
 
   useEffect(() => {
     fetchProjectData();
@@ -122,7 +124,6 @@ const ManagerProjects = () => {
   };
 
   // 🔄 TOGGLE EMPLOYEE SELECTION
-  // ✅ FIX: uses emp.employee_id (string code) instead of emp.id (numeric)
   const handleEmployeeToggle = (employeeCode) => {
     setSelectedEmployees((prev) => {
       const current = prev[currentProjectId] || [];
@@ -134,7 +135,6 @@ const ManagerProjects = () => {
   };
 
   // 🔄 SELECT ALL EMPLOYEES
-  // ✅ FIX: map to employee_id (string code) instead of id (numeric)
   const handleSelectAll = () => {
     const allEmployeeCodes = employees.map((emp) => emp.employee_id);
     setSelectedEmployees((prev) => ({
@@ -155,7 +155,6 @@ const ManagerProjects = () => {
   const handleAssignEmployees = async () => {
     if (!currentProjectId) return;
 
-    // ✅ FIX: selectedIds already contains employee_id strings (e.g. "ACS1001")
     const selectedIds = (selectedEmployees[currentProjectId] || []).map((id) =>
       String(id)
     );
@@ -181,7 +180,6 @@ const ManagerProjects = () => {
   };
 
   // 🔄 REMOVE SINGLE EMPLOYEE
-  // ✅ FIX: receives employeeCode (string) and filters by string comparison
   const handleRemoveEmployee = async (projectId, employeeCode) => {
     if (!window.confirm("Are you sure you want to remove this employee?"))
       return;
@@ -209,7 +207,6 @@ const ManagerProjects = () => {
   };
 
   // 🔄 GET ASSIGNED EMPLOYEE DETAILS
-  // ✅ FIX: match by employee_id (string code) instead of numeric id
   const getAssignedEmployeeDetails = (employeeIds) => {
     if (!employeeIds || employeeIds.length === 0) return [];
 
@@ -223,25 +220,6 @@ const ManagerProjects = () => {
           : null;
       })
       .filter(Boolean);
-  };
-
-  // 🔄 GET ASSIGNED EMPLOYEE NAMES (FOR SUMMARY)
-  // ✅ FIX: match by employee_id (string code) instead of numeric id
-  const getAssignedEmployeeNames = (employeeIds) => {
-    if (!employeeIds || employeeIds.length === 0) return "No employees assigned";
-
-    const names = employeeIds
-      .map((code) => {
-        const emp = employees.find(
-          (e) => String(e.employee_id) === String(code)
-        );
-        return emp ? emp.name : null;
-      })
-      .filter(Boolean);
-
-    if (names.length === 0) return "No employees found";
-    if (names.length <= 2) return names.join(", ");
-    return `${names.slice(0, 2).join(", ")} +${names.length - 2} more`;
   };
 
   // 🔄 FILTERED EMPLOYEES FOR MODAL SEARCH
@@ -449,7 +427,6 @@ const ManagerProjects = () => {
                                 <span>
                                   {emp.name} ({emp.employee_id})
                                 </span>
-                                {/* ✅ FIX: pass emp.employee_id (string code) not emp.id */}
                                 <button
                                   onClick={() =>
                                     handleRemoveEmployee(p.id, emp.employee_id)
@@ -555,7 +532,6 @@ const ManagerProjects = () => {
             <div className="modal-employees-list">
               {filteredEmployees.length > 0 ? (
                 filteredEmployees.map((emp) => {
-                  // ✅ FIX: check selection using employee_id (string code) not numeric id
                   const isSelected = currentSelection.includes(emp.employee_id);
                   return (
                     <div
@@ -563,7 +539,6 @@ const ManagerProjects = () => {
                       className={`employee-item ${isSelected ? "selected" : ""}`}
                     >
                       <label className="employee-checkbox">
-                        {/* ✅ FIX: toggle using emp.employee_id (string code) not emp.id */}
                         <input
                           type="checkbox"
                           checked={isSelected}

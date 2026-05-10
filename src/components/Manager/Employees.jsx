@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Employees.css";
+import API_URL from "../../apiConfig"; // ✅ Good job importing this!
 
 const Employees = ({ managerId }) => {
   const [employees, setEmployees] = useState([]);
@@ -10,7 +11,8 @@ const Employees = ({ managerId }) => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/manager/all-team`);
+        // ✅ FIX: Now using the imported API_URL variable instead of process.env
+        const response = await fetch(`${API_URL}/api/manager/all-team`);
         const data = await response.json();
 
         if (Array.isArray(data)) {

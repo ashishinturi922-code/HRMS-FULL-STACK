@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import API_URL from "../../apiConfig"; // ✅ FIX: Importing your config file
 import "./ApplyLeave.css";
 
 const ManagerApplyLeave = () => {
@@ -28,8 +29,6 @@ const ManagerApplyLeave = () => {
     "Privilege Leave","Compensatory Off","Loss of Pay",
     "Marriage Leave","Half Day Leave","Menstruation Leave",
   ];
-
-  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`;
 
   // ✅ DATE WINDOW: past 15 days + unlimited future
   const todayDate = new Date();
@@ -81,7 +80,7 @@ const ManagerApplyLeave = () => {
   const fetchMyLeaves = useCallback(async () => {
     try {
       const res = await axios.get(
-        `${BACKEND_URL}/api/manager/my-leaves/${currentUser.id}`
+        `${API_URL}/api/manager/my-leaves/${currentUser.id}` // ✅ FIX: Used API_URL
       );
       setRequests(res.data);
     } catch (err) {
@@ -163,13 +162,13 @@ const ManagerApplyLeave = () => {
     try {
       if (editId) {
         await axios.put(
-          `${BACKEND_URL}/api/manager/update-my-leave/${editId}`,
+          `${API_URL}/api/manager/update-my-leave/${editId}`, // ✅ FIX: Used API_URL
           leaveData
         );
         alert(`Updated (${workingDays} days) ✅`);
       } else {
         await axios.post(
-          `${BACKEND_URL}/api/manager/apply-leave`,
+          `${API_URL}/api/manager/apply-leave`, // ✅ FIX: Used API_URL
           leaveData
         );
         alert(`Applied (${workingDays} days) ✅`);
@@ -197,7 +196,7 @@ const ManagerApplyLeave = () => {
 
     try {
       await axios.delete(
-        `${BACKEND_URL}/api/manager/delete-leave/${id}`
+        `${API_URL}/api/manager/delete-leave/${id}` // ✅ FIX: Used API_URL
       );
       fetchMyLeaves();
     } catch {

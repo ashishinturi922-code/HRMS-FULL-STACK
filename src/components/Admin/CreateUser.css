@@ -143,7 +143,8 @@
 .cu-field input {
   width: 100%;
   height: 60px;
-  padding: 22px 16px 6px 48px;
+  /* ✅ GUARANTEED FIX: 60px left padding with !important so nothing overrides it */
+  padding: 22px 44px 6px 60px !important; 
   border: 1.5px solid var(--border);
   border-radius: var(--radius-field);
   background: #fafbfc;
@@ -153,6 +154,7 @@
   color: var(--text-dark);
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  box-sizing: border-box !important;
 }
 
 .cu-field input:hover {
@@ -179,7 +181,8 @@
 .cu-field label {
   position: absolute;
   top: 19px;
-  left: 48px;
+  /* ✅ GUARANTEED FIX: Matched to the 60px input padding with !important */
+  left: 60px !important; 
   font-size: 14px;
   font-weight: 500;
   color: var(--text-soft);
@@ -218,7 +221,7 @@
   color: var(--text-soft);
   pointer-events: none;
   transition: color var(--transition);
-  z-index: 1;
+  z-index: 10;
 }
 
 .cu-field input:focus ~ .cu-field__icon {
@@ -238,7 +241,7 @@
   font-size: 15px;
   padding: 4px;
   transition: color var(--transition);
-  z-index: 1;
+  z-index: 10;
 }
 
 .cu-field__eye:hover {
@@ -289,7 +292,8 @@
 .cu-select-box select {
   width: 100%;
   height: 56px;
-  padding: 0 18px 0 48px;
+  /* ✅ GUARANTEED FIX: Adjusted to 60px with !important to match inputs */
+  padding: 0 44px 0 60px !important; 
   border: 1.5px solid var(--border);
   border-radius: var(--radius-field);
   background: #fafbfc;
@@ -301,6 +305,7 @@
   outline: none;
   cursor: pointer;
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  box-sizing: border-box !important;
 }
 
 .cu-select-box select:hover {

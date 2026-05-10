@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const TeamLeaderCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -16,23 +17,24 @@ const TeamLeaderCalendar = () => {
   const fetchCalendarEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/teamleader/calendar-events`);
+      // ✅ FIX: Using API_URL instead of process.env
+      const response = await fetch(`${API_URL}/api/teamleader/calendar-events`);
       
-      // Safety check for non-200 responses (like 404 or 500)
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
 
       const data = await response.json();
-
-      // Convert the array from database to the { "YYYY-MM-DD": [...] } format
       const eventMap = {};
 
-      // ✅ CRITICAL FIX: Ensure 'data' is actually an array before calling forEach
       if (Array.isArray(data)) {
         data.forEach((event) => {
-          // Normalizing date format (handling ISO strings if necessary)
-          const dateKey = event.date_key ? event.date_key.split('T')[0] : null;
+          const rawDate = event.date_key || event.event_date;
+          if (!rawDate) return;
+
+          // ✅ FIX: Parse the date into a real Date object to prevent timezone shifting (the 1-day bug)
+          const d = new Date(rawDate);
+          const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
           
           if (dateKey) {
             if (!eventMap[dateKey]) {
@@ -41,9 +43,8 @@ const TeamLeaderCalendar = () => {
             eventMap[dateKey].push({
               title: event.title,
               description: event.description,
-              startTime: event.start_time,
-              endTime: event.end_time,
               category: event.category || "General",
+              // ✅ Time fields removed
             });
           }
         });
@@ -54,7 +55,6 @@ const TeamLeaderCalendar = () => {
       setEvents(eventMap);
     } catch (error) {
       console.error("Error fetching events from DB:", error);
-      // Fallback to empty object to prevent crash
       setEvents({});
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ const TeamLeaderCalendar = () => {
 
   // 🔔 TODAY EVENTS
   useEffect(() => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     setNotifications(events[todayKey] || []);
   }, [events]);
 
@@ -84,9 +84,7 @@ const TeamLeaderCalendar = () => {
     const month = currentDate.getMonth();
 
     const firstDay = new Date(year, month, 1).getDay();
-    // Adjusting for Monday start
     const shift = firstDay === 0 ? 6 : firstDay - 1;
-
     const totalDays = new Date(year, month + 1, 0).getDate();
 
     let days = [];
@@ -135,7 +133,7 @@ const TeamLeaderCalendar = () => {
                 notifications.map((n, i) => (
                   <div key={i} className="notif-item">
                     <strong>{n.title}</strong>
-                    <p>{n.startTime} - {n.endTime}</p>
+                    {/* ✅ Time removed from dropdown */}
                   </div>
                 ))
               ) : (
@@ -213,7 +211,9 @@ const TeamLeaderCalendar = () => {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Events Overview</h3>
-              <p className="selected-date-text">{selectedDate}</p>
+              <p className="selected-date-text">
+                {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
             </div>
 
             <div className="modal-body">
@@ -227,9 +227,7 @@ const TeamLeaderCalendar = () => {
                       <strong>{e.title}</strong>
                       <p className="desc">{e.description || "No description provided."}</p>
                     </div>
-                    <div className="event-time">
-                      🕒 {e.startTime?.slice(0, 5)} - {e.endTime?.slice(0, 5)}
-                    </div>
+                    {/* ✅ Time removed from modal */}
                   </div>
                 ))
               ) : (

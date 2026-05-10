@@ -3,6 +3,7 @@ import "./AdminTimeSheets.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaEye, FaSearch } from "react-icons/fa";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const AdminTimeSheets = () => {
   const [activeTab, setActiveTab] = useState("approval");
@@ -17,7 +18,8 @@ const AdminTimeSheets = () => {
   // ✅ FETCH DATA FROM LIVE DATABASE
   const loadTimesheets = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-timesheets`);
+      // ✅ FIX: Using API_URL
+      const res = await fetch(`${API_URL}/api/admin/all-timesheets`);
       const data = await res.json();
       
       console.log("Database response:", data); 
@@ -36,7 +38,8 @@ const AdminTimeSheets = () => {
   // ✅ UPDATE STATUS IN LIVE DATABASE
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/timesheets/status/${id}`, {
+      // ✅ FIX: Using API_URL
+      const res = await fetch(`${API_URL}/api/admin/timesheets/status/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })

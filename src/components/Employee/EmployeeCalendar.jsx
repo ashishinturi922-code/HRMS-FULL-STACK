@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const EmployeeCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -14,20 +15,26 @@ const EmployeeCalendar = () => {
   // ✅ FETCH EVENTS FROM DATABASE
   const fetchEvents = async () => {
     try {
-      // Calling the backend endpoint you created in EmployeeController
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/employee/calendar`);
+      // ✅ FIX: Replaced broken process.env with API_URL
+      const response = await fetch(`${API_URL}/api/employee/calendar`);
       const data = await response.json();
 
       if (response.ok) {
         // Transform flat array from database into the { "dateKey": [] } format
         const formattedEvents = data.reduce((acc, event) => {
-          // Ensure date is in YYYY-MM-DD format regardless of DB format
-          const dateKey = new Date(event.date_key || event.date)
-            .toISOString()
-            .split("T")[0];
+          // ✅ FIX: Parse the date into a real Date object to prevent timezone shifting (the 1-day bug)
+          const d = new Date(event.date_key || event.date);
+          const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
           
           if (!acc[dateKey]) acc[dateKey] = [];
-          acc[dateKey].push(event);
+          
+          acc[dateKey].push({
+            title: event.title,
+            description: event.description,
+            category: event.category || "General"
+            // ✅ Time fields have been omitted here
+          });
+          
           return acc;
         }, {});
 
@@ -44,7 +51,10 @@ const EmployeeCalendar = () => {
 
   // 🔔 TODAY'S NOTIFICATIONS
   useEffect(() => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    // ✅ FIX: Use local time for 'today' to prevent timezone shift bugs
+    const todayObj = new Date();
+    const todayKey = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, "0")}-${String(todayObj.getDate()).padStart(2, "0")}`;
+    
     setNotifications(events[todayKey] || []);
   }, [events]);
 
@@ -102,7 +112,7 @@ const EmployeeCalendar = () => {
                 notifications.map((n, i) => (
                   <div key={i} className="notif-item">
                     <strong>{n.title}</strong>
-                    <p>{n.startTime || n.start_time} - {n.endTime || n.end_time}</p>
+                    {/* ✅ Time removed from dropdown */}
                   </div>
                 ))
               ) : (
@@ -163,17 +173,19 @@ const EmployeeCalendar = () => {
 
       {/* MODAL */}
       {selectedDate && (
-        <div className="modal-overlay">
-          <div className="modal-box">
+        <div className="modal-overlay" onClick={() => setSelectedDate(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3>Events</h3>
-            <p>{selectedDate}</p>
+            <p>
+              {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
 
             {events[selectedDate]?.length > 0 ? (
               events[selectedDate].map((e, i) => (
                 <div key={i} className="event-item">
                   <strong>{e.title}</strong>
                   <p>{e.description}</p>
-                  <p>{e.startTime || e.start_time} - {e.endTime || e.end_time}</p>
+                  {/* ✅ Time removed from modal */}
                   <small>{e.category}</small>
                 </div>
               ))

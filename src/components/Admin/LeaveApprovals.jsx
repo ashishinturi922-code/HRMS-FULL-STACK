@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Leaveapprovals.css"; 
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 
 const AdminLeaveApproval = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -8,8 +9,8 @@ const AdminLeaveApproval = () => {
   // ✅ Fetch and filter leaves for Managers only
   const fetchManagerLeavesForAdmin = async () => {
     try {
-      // Accessing the shared API endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-leaves`);
+      // ✅ FIX: Using API_URL
+      const response = await fetch(`${API_URL}/api/admin/all-leaves`);
       const data = await response.json();
       
       // ✅ Filter: Only include requests where the role is 'manager'
@@ -32,7 +33,8 @@ const AdminLeaveApproval = () => {
   // ✅ Admin Action logic specifically for Manager requests
   const handleAction = async (leaveId, status) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/update-leave/${leaveId}`, {
+      // ✅ FIX: Using API_URL
+      const response = await fetch(`${API_URL}/api/admin/update-leave/${leaveId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),

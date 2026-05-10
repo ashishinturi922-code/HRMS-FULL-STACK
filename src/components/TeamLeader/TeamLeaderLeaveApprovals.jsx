@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
 import "./TeamLeaderCommon.css";
 
 const TeamLeaderLeaveApprovals = () => {
@@ -8,15 +9,14 @@ const TeamLeaderLeaveApprovals = () => {
 
   // Get current TL info from localStorage
   const currentUser = JSON.parse(localStorage.getItem("user")) || { id: null };
-  const BACKEND_URL = `${process.env.REACT_APP_API_URL}`; 
 
   // 1. Fetch leaves using the correct route defined in index.js
   const fetchLeaves = async () => {
     if (!currentUser.id) return;
     try {
       setLoading(true);
-      // Fixed URL: Matches app.get('/api/teamleader/leaves/pending/:tlId', ...)
-      const response = await axios.get(`${BACKEND_URL}/api/teamleader/leaves/pending/${currentUser.id}`);
+      // ✅ FIX: Using API_URL
+      const response = await axios.get(`${API_URL}/api/teamleader/leaves/pending/${currentUser.id}`);
       setLeaves(response.data);
     } catch (error) {
       console.error("Error fetching leaves:", error);
@@ -32,8 +32,8 @@ const TeamLeaderLeaveApprovals = () => {
   // 2. Handle Approval using the correct put route
   const handleApprove = async (leaveId) => {
     try {
-      // Fixed URL: Matches app.put('/api/teamleader/leaves/approve/:leaveId', ...)
-      await axios.put(`${BACKEND_URL}/api/teamleader/leaves/approve/${leaveId}`, {
+      // ✅ FIX: Using API_URL
+      await axios.put(`${API_URL}/api/teamleader/leaves/approve/${leaveId}`, {
         status: "Approved"
       });
       alert("Leave Approved ✅");
@@ -46,8 +46,8 @@ const TeamLeaderLeaveApprovals = () => {
   // 3. Handle Rejection
   const handleReject = async (leaveId) => {
     try {
-      // Fixed URL: Matches app.put('/api/teamleader/leaves/approve/:leaveId', ...)
-      await axios.put(`${BACKEND_URL}/api/teamleader/leaves/approve/${leaveId}`, {
+      // ✅ FIX: Using API_URL
+      await axios.put(`${API_URL}/api/teamleader/leaves/approve/${leaveId}`, {
         status: "Rejected"
       });
       alert("Leave Rejected ❌");
