@@ -15,7 +15,8 @@ const ManagerProjects = () => {
 
   // ✅ FIX: Changed hardcoded IP to localhost to prevent timeout errors. 
   // If you need to test on a mobile phone, use an environment variable like REACT_APP_BACKEND_URL
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+  // ✅ Strictly using the environment variable. No localhost fallback.
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   // ✅ FETCH DATA FROM DATABASE
   const fetchProjectData = useCallback(async () => {

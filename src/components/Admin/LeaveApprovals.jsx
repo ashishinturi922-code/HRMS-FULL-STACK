@@ -98,4 +98,4 @@ const AdminLeaveApproval = () => {
   );
 };
 
-export default AdminLeaveApproval;
+export default AdminLeaveApproval;	

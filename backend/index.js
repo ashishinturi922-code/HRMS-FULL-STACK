@@ -14,9 +14,14 @@ const EmployeeController = require('./controllers/EmployeeController');
 
 const app = express();
 
-// ✅ CORS: Allow frontend on port 3000
+// ✅ CORS: Allow frontend on port 3000 and Production
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000',
+        'https://hrapta.com',
+        'https://www.hrapta.com'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -260,7 +265,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
     console.log(`🚀 API Health: http://localhost:${PORT}/api/health`);
 });
 
