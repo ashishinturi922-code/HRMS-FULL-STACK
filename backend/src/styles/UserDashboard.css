@@ -1,0 +1,284 @@
+/* ============================================
+   GOOGLE FONT & GLOBAL RESET
+============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f4f8; /* Soft slate gray background */
+  color: #1e293b;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.user-dashboard {
+  padding: 40px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   TOPBAR STYLING
+============================================ */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 12px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.topbar-center {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  gap: 5px;
+}
+
+.nav-link {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.nav-link.active-link {
+  background: #000000;
+  color: #ffffff;
+}
+
+.profile-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-circle {
+  width: 35px;
+  height: 35px;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #000000;
+}
+
+.logout-btn {
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  padding: 6px 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* ============================================
+   FORM CARD STYLING
+============================================ */
+.glass-card {
+  background: #ffffff;
+  max-width: 500px; /* Aligns with the narrow form in the portal */
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.glass-card h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 30px;
+}
+
+/* 3-COLUMN ALIGNMENT FIX */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: flex-end; /* Ensures inputs stay leveled even if labels wrap */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #000000;
+}
+
+/* ============================================
+   INPUT & DATE FIXES
+============================================ */
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #000000; /* High contrast black text */
+  background: #ffffff;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #000000;
+}
+
+/* FORCING DATE TEXT TO BE VISIBLE */
+input[type="date"] {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0%); /* Ensures the calendar icon is dark/visible */
+  opacity: 0.7;
+}
+
+textarea {
+  min-height: 150px;
+  margin-top: 5px;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #cbd5e1;
+}
+
+/* ============================================
+   VIBRANT GRADIENT BUTTON
+============================================ */
+.submit-btn {
+  width: 100%;
+  margin-top: 25px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 15px;
+  color: #ffffff;
+  cursor: pointer;
+  /* Matching the exact blue-to-purple gradient from your screenshot */
+  background: linear-gradient(90deg, #4481eb 0%, #9061f9 100%);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+  box-shadow: 0 8px 20px rgba(68, 129, 235, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   MY HISTORY TABLE
+============================================ */
+.history-card {
+  max-width: 1000px; /* Wider card for history table */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px 20px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+td {
+  padding: 18px 20px;
+  color: #000000;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+tr:hover td {
+  background-color: #fdfdfd;
+}
+
+/* STATUS BADGES */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.status-badge.approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.pending {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.status-badge.invoice-generated {
+  background: #f3e8ff;
+  color: #7e22ce;
+}

@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "./Profile.css";
-import { FaEdit, FaSave } from "react-icons/fa";
+import { FaEdit, FaSave, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [edit, setEdit] = useState(false);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ✅ FIX: Add visibility state for each password field
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
+  });
 
   const [documents, setDocuments] = useState({
     aadhar: "",
@@ -34,6 +41,29 @@ const Profile = () => {
     confirmPassword: ""
   });
 
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+
+  // ✅ FIX 1: API URL Fallback
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+  // ✅ FIX 2: Helper to get Authorization headers for fetch API
+  const getAuthHeaders = (isFormData = false) => {
+    const token = localStorage.getItem("token");
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const finalToken = token || storedUser?.token || "";
+
+    const headers = {
+      Authorization: `Bearer ${finalToken}`
+    };
+
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    return headers;
+  };
+
   // --- FETCH DATA FROM BACKEND ---
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,7 +76,6 @@ const Profile = () => {
         }
 
         const user = JSON.parse(storedUser);
-        // Robust check for ID in localStorage
         const userId = user.id || user.ID;
 
         if (!userId) {
@@ -55,8 +84,12 @@ const Profile = () => {
           return;
         }
 
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/${userId}`);
-        if (!res.ok) throw new Error("Server error");
+        const res = await fetch(`${API_URL}/api/profile/${userId}`, {
+          method: "GET",
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
         
         const dbData = await res.json();
         
@@ -75,17 +108,19 @@ const Profile = () => {
         });
         
         if (dbData.profile_photo) {
-          setImage(`${process.env.REACT_APP_API_URL}${dbData.profile_photo}`);
+          setImage(`${API_URL}${dbData.profile_photo}`);
         }
       } catch (err) {
         console.error("Fetch error:", err);
+        setMessage("Failed to load profile");
+        setMessageType("error");
       } finally {
         setLoading(false); 
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [API_URL]);
 
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -95,6 +130,14 @@ const Profile = () => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
 
+  // ✅ FIX: Toggle password visibility
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file || !data.id) return;
@@ -102,20 +145,28 @@ const Profile = () => {
     const formData = new FormData();
     formData.append("photo", file);
 
-    fetch(`${process.env.REACT_APP_API_URL}/api/profile/upload-photo/${data.id}`, {
+    fetch(`${API_URL}/api/profile/upload-photo/${data.id}`, {
       method: "POST",
+      headers: getAuthHeaders(true),
       body: formData
     })
-    .then(res => res.json())
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Upload failed");
+      return res.json();
+    })
     .then(r => {
-      const newUrl = `${process.env.REACT_APP_API_URL}${r.photoUrl}`;
+      const newUrl = `${API_URL}${r.photoUrl}`;
       setImage(newUrl);
       const user = JSON.parse(localStorage.getItem("user"));
       localStorage.setItem("user", JSON.stringify({...user, profile_photo: r.photoUrl}));
       window.dispatchEvent(new Event("storage"));
-      alert("Photo Updated ✅");
+      setMessage("Photo Updated ✅");
+      setMessageType("success");
     })
-    .catch(err => alert("Photo upload failed"));
+    .catch(err => {
+      setMessage("Photo upload failed: " + err.message);
+      setMessageType("error");
+    });
   };
 
   const handleDocUpload = async (e, type) => {
@@ -126,18 +177,26 @@ const Profile = () => {
 
     const formData = new FormData();
     formData.append("document", file);
-    // Maps to column names expected by AdminController
     const dbColumnName = type === "aadhar" ? "aadhar_path" : type === "pan" ? "pan_path" : "certificate_path";
     formData.append("type", dbColumnName);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/upload-doc/${data.id}`, {
+      const res = await fetch(`${API_URL}/api/profile/upload-doc/${data.id}`, {
         method: "POST",
+        headers: getAuthHeaders(true),
         body: formData
       });
-      if (res.ok) alert(`${type.toUpperCase()} Uploaded ✅`);
-      else alert("Upload failed");
-    } catch (err) { alert("Doc upload failed"); }
+      if (res.ok) {
+        setMessage(`${type.toUpperCase()} Uploaded ✅`);
+        setMessageType("success");
+      } else {
+        setMessage("Upload failed");
+        setMessageType("error");
+      }
+    } catch (err) { 
+      setMessage("Doc upload failed");
+      setMessageType("error");
+    }
   };
 
   const validate = () => {
@@ -145,12 +204,14 @@ const Profile = () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (data.phone && !phoneRegex.test(data.phone)) {
-      alert("Phone must be 10 digits");
+      setMessage("Phone must be 10 digits");
+      setMessageType("error");
       return false;
     }
 
     if (data.personalEmail && !emailRegex.test(data.personalEmail)) {
-      alert("Invalid personal email format");
+      setMessage("Invalid personal email format");
+      setMessageType("error");
       return false;
     }
     return true;
@@ -159,11 +220,11 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!validate()) return;
     
-    // Ensure ID is available from state or localStorage fallback
     const userId = data.id || JSON.parse(localStorage.getItem("user"))?.id;
     
     if (!userId) {
-      alert("User ID missing. Please log in again.");
+      setMessage("User ID missing. Please log in again.");
+      setMessageType("error");
       return;
     }
 
@@ -171,26 +232,25 @@ const Profile = () => {
       name: data.name,
       gender: data.gender,
       phone: data.phone,
-      altPhone: data.altPhone,
+      alt_phone: data.altPhone,
       dob: data.dob,
       doj: data.doj,
-      personalEmail: data.personalEmail,
-      officialEmail: data.officialEmail,
-      bloodGroup: data.bloodGroup,
+      personal_email: data.personalEmail,
+      username: data.officialEmail,
+      blood_group: data.bloodGroup,
       address: data.address
     };
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/${userId}`, {
+      const res = await fetch(`${API_URL}/api/profile/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
 
       const result = await res.json();
 
       if (res.ok) {
-        // Update LocalStorage to keep session in sync
         const currentUser = JSON.parse(localStorage.getItem("user"));
         localStorage.setItem("user", JSON.stringify({ 
           ...currentUser, 
@@ -198,32 +258,61 @@ const Profile = () => {
           username: data.officialEmail 
         }));
         
-        alert("Profile Updated Successfully ✅");
+        setMessage("Profile Updated Successfully ✅");
+        setMessageType("success");
         setEdit(false);
         window.dispatchEvent(new Event("storage")); 
       } else {
-        alert("Error: " + (result.error || "Update failed"));
+        setMessage("Error: " + (result.error || "Update failed"));
+        setMessageType("error");
       }
     } catch (err) { 
       console.error("Save error:", err);
-      alert("Connection failed. Check if backend is running."); 
+      setMessage("Connection failed. Check if backend is running."); 
+      setMessageType("error");
     }
   };
 
   const handlePasswordUpdate = async () => {
-    if (!passwords.newPassword) return alert("Please enter a new password");
-    if (passwords.newPassword !== passwords.confirmPassword) return alert("Passwords do not match");
+    if (!passwords.currentPassword) {
+      setMessage("Please enter your current password");
+      setMessageType("error");
+      return;
+    }
+    if (!passwords.newPassword) {
+      setMessage("Please enter a new password");
+      setMessageType("error");
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setMessage("Passwords do not match");
+      setMessageType("error");
+      return;
+    }
     
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/update-password`, {
+      const res = await fetch(`${API_URL}/api/profile/update-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: data.id, ...passwords })
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ 
+          id: data.id, 
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword 
+        })
       });
       const result = await res.json();
-      if (res.ok) alert("Password Updated ✅");
-      else alert("Update failed: " + (result.error || "Check current password"));
-    } catch (err) { alert("Error updating password"); }
+      if (res.ok) {
+        setMessage("Password Updated ✅");
+        setMessageType("success");
+        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        setMessage("Update failed: " + (result.error || "Check current password"));
+        setMessageType("error");
+      }
+    } catch (err) { 
+      setMessage("Error updating password");
+      setMessageType("error");
+    }
   };
 
   if (loading) return <div className="loading-container"><h2>Loading Profile...</h2></div>;
@@ -248,6 +337,12 @@ const Profile = () => {
           </button>
         </div>
       </div>
+
+      {message && (
+        <div className={`message ${messageType}`}>
+          {message}
+        </div>
+      )}
 
       <div className="tabs">
         <button onClick={() => setActiveTab("overview")} className={activeTab==="overview"?"active":""}>Overview</button>
@@ -291,18 +386,69 @@ const Profile = () => {
 
         {activeTab === "security" && (
           <div className="security-box">
-            <div className="form-group">
+            {/* ✅ Current Password with Eye Icon */}
+            <div className="form-group password-group">
               <label>Current Password</label>
-              <input type="password" name="currentPassword" placeholder="Enter Current Password" onChange={handlePasswordChange}/>
+              <div className="password-input-wrapper">
+                <input 
+                  type={showPasswords.currentPassword ? "text" : "password"} 
+                  name="currentPassword" 
+                  placeholder="Enter Current Password" 
+                  value={passwords.currentPassword}
+                  onChange={handlePasswordChange}
+                />
+                <button 
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => togglePasswordVisibility("currentPassword")}
+                >
+                  {showPasswords.currentPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
-            <div className="form-group">
+
+            {/* ✅ New Password with Eye Icon */}
+            <div className="form-group password-group">
               <label>New Password</label>
-              <input type="password" name="newPassword" placeholder="Enter New Password" onChange={handlePasswordChange}/>
+              <div className="password-input-wrapper">
+                <input 
+                  type={showPasswords.newPassword ? "text" : "password"} 
+                  name="newPassword" 
+                  placeholder="Enter New Password" 
+                  value={passwords.newPassword}
+                  onChange={handlePasswordChange}
+                />
+                <button 
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => togglePasswordVisibility("newPassword")}
+                >
+                  {showPasswords.newPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
-            <div className="form-group">
+
+            {/* ✅ Confirm Password with Eye Icon */}
+            <div className="form-group password-group">
               <label>Confirm Password</label>
-              <input type="password" name="confirmPassword" placeholder="Confirm New Password" onChange={handlePasswordChange}/>
+              <div className="password-input-wrapper">
+                <input 
+                  type={showPasswords.confirmPassword ? "text" : "password"} 
+                  name="confirmPassword" 
+                  placeholder="Confirm New Password" 
+                  value={passwords.confirmPassword}
+                  onChange={handlePasswordChange}
+                />
+                <button 
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => togglePasswordVisibility("confirmPassword")}
+                >
+                  {showPasswords.confirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
+
             <button className="update-btn" onClick={handlePasswordUpdate}>Update Password</button>
           </div>
         )}

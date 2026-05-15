@@ -12,11 +12,19 @@ class AdminController {
 	        const [doneRows] = await db.execute('SELECT COUNT(*) as count FROM projects WHERE status = "Completed"');
 	        const [deptRows] = await db.execute('SELECT COUNT(*) as count FROM departments');
 
+	        // ✅ FIX: UNION both tables so Team Leaders are counted too
 	        const [leaveRows] = await db.execute(`
-	            SELECT COUNT(DISTINCT user_id) as onLeave 
-	            FROM leave_requests 
-	            WHERE status = 'Approved' 
-	            AND CURDATE() BETWEEN from_date AND to_date
+	            SELECT COUNT(*) as onLeave FROM (
+	                SELECT DISTINCT user_id AS uid
+	                FROM leave_requests
+	                WHERE status = 'Approved'
+	                AND CURDATE() BETWEEN DATE(from_date) AND DATE(to_date)
+	                UNION
+	                SELECT DISTINCT tl_user_id AS uid
+	                FROM tl_leave_requests
+	                WHERE status = 'Approved'
+	                AND CURDATE() BETWEEN DATE(from_date) AND DATE(to_date)
+	            ) AS combined
 	        `);
 
 	        const totalEmployees = empRows[0].total || 0;
@@ -168,9 +176,6 @@ class AdminController {
      */
     async getCalendarEvents(req, res) {
         try {
-            // ✅ FIXED: Use DATE_FORMAT to return date_key as a plain "YYYY-MM-DD" string
-            // Without this, MySQL returns a full ISO timestamp (e.g. "2026-05-07T18:30:00.000Z")
-            // which when parsed in UTC shifts the date back by 1 day for IST (+5:30) users.
             const [rows] = await db.execute(
                 `SELECT id, title, description, category, start_time, end_time,
                         DATE_FORMAT(date_key, '%Y-%m-%d') AS date_key
@@ -183,7 +188,6 @@ class AdminController {
         }
     }
 
-    // ✅ FIX: startTime and endTime safely default to null if not sent
     async saveCalendarEvent(req, res) {
         try {
             const {
@@ -200,12 +204,9 @@ class AdminController {
                 return res.status(400).json({ error: "Title and date are required" });
             }
 
-            // ✅ FIXED: Validate that 'date' is a plain YYYY-MM-DD string.
-            // This prevents any accidental datetime/timezone shift at the DB level.
-            const plainDate = date.split("T")[0]; // strip time part if ever present
+            const plainDate = date.split("T")[0];
 
             if (id) {
-                // UPDATE existing event
                 const sql = `UPDATE calendar_events 
                              SET title=?, description=?, start_time=?, end_time=?, category=?, date_key=? 
                              WHERE id=?`;
@@ -219,7 +220,6 @@ class AdminController {
                     id
                 ]);
             } else {
-                // INSERT new event
                 const sql = `INSERT INTO calendar_events (title, description, start_time, end_time, category, date_key) 
                              VALUES (?, ?, ?, ?, ?, ?)`;
                 await db.execute(sql, [
@@ -267,9 +267,18 @@ class AdminController {
         try {
             const { id } = req.params;
             const {
-                name, gender, phone, alt_phone, dob, doj,
-                personal_email, username, blood_group, address,
-                manager_id
+                name,
+                gender,
+                phone,
+                alt_phone,
+                dob,
+                doj,
+                personal_email,
+                username,
+                blood_group,
+                address,
+                manager_id = null  // ✅ FIX: default to null — Admin profile never sends this,
+                                   //         and mysql2 throws if a bind param is undefined
             } = req.body;
 
             const sql = `UPDATE users SET 
@@ -279,9 +288,18 @@ class AdminController {
                 WHERE id=?`;
 
             await db.execute(sql, [
-                name, gender, phone, alt_phone,
-                dob, doj, personal_email, username,
-                blood_group, address, manager_id, id
+                name         || null,
+                gender       || null,
+                phone        || null,
+                alt_phone    || null,
+                dob          || null,
+                doj          || null,
+                personal_email || null,
+                username     || null,
+                blood_group  || null,
+                address      || null,
+                manager_id,          // already null by default
+                id
             ]);
 
             res.json({ success: true, message: "Profile Updated Successfully ✅" });
@@ -295,6 +313,7 @@ class AdminController {
         try {
             const { id, currentPassword, newPassword } = req.body;
             const [rows] = await db.execute('SELECT password FROM users WHERE id = ?', [id]);
+
             if (rows.length === 0) return res.status(404).json({ error: "User not found" });
 
             const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
@@ -308,6 +327,44 @@ class AdminController {
             res.json({ success: true, message: "Password updated successfully" });
         } catch (error) {
             res.status(500).json({ error: "Failed to update password" });
+        }
+    }
+
+    // ✅ FIX: Upload profile photo for Admin
+    async uploadPhoto(req, res) {
+        try {
+            const { id } = req.params;
+            if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+            const photoUrl = `/uploads/profiles/${req.file.filename}`;
+            await db.execute('UPDATE users SET profile_photo = ? WHERE id = ?', [photoUrl, id]);
+
+            res.json({ success: true, photoUrl });
+        } catch (error) {
+            console.error("Upload Photo Error:", error);
+            res.status(500).json({ error: "Failed to upload photo" });
+        }
+    }
+
+    // ✅ FIX: Upload document (Aadhar / PAN / Certificate) for Admin
+    async uploadDoc(req, res) {
+        try {
+            const { id } = req.params;
+            if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+            const { type } = req.body;
+            const allowed = ['aadhar_path', 'pan_path', 'certificate_path'];
+            if (!allowed.includes(type)) {
+                return res.status(400).json({ error: "Invalid document type" });
+            }
+
+            const docUrl = `/uploads/documents/${req.file.filename}`;
+            await db.execute(`UPDATE users SET ${type} = ? WHERE id = ?`, [docUrl, id]);
+
+            res.json({ success: true, docUrl });
+        } catch (error) {
+            console.error("Upload Doc Error:", error);
+            res.status(500).json({ error: "Failed to upload document" });
         }
     }
 
@@ -331,17 +388,24 @@ class AdminController {
 
 	async getLeaveEmployeesToday(req, res) {
 	        try {
-	            // ✅ FIX: Select u.id, u.name, u.employee_id explicitly so the
-	            //         modal can display name and employee code correctly.
-	            //         Also wrap response in { employees: [] } to match frontend.
 	            const sql = `
 	                SELECT u.id, u.name, u.employee_id, u.department, u.role,
 	                       l.leave_type, l.status
 	                FROM leave_requests l
 	                JOIN users u ON l.user_id = u.id
-	                WHERE l.status = 'Approved' 
+	                WHERE l.status = 'Approved'
 	                AND CURDATE() BETWEEN DATE(l.from_date) AND DATE(l.to_date)
-	                ORDER BY u.name ASC
+
+	                UNION
+
+	                SELECT u.id, u.name, u.employee_id, u.department, u.role,
+	                       tl.leave_type, tl.status
+	                FROM tl_leave_requests tl
+	                JOIN users u ON tl.tl_user_id = u.id
+	                WHERE tl.status = 'Approved'
+	                AND CURDATE() BETWEEN DATE(tl.from_date) AND DATE(tl.to_date)
+
+	                ORDER BY name ASC
 	            `;
 	            const [rows] = await db.execute(sql);
 	            res.json({ employees: Array.isArray(rows) ? rows : [] });
@@ -446,6 +510,81 @@ class AdminController {
             );
         } catch (error) {
             console.error("Timesheet Notification Error:", error);
+        }
+    }
+
+    /**
+     * 10. RESIGNATION MANAGEMENT (Fix #7 — was missing)
+     */
+    async getAllResignations(req, res) {
+        try {
+            const [rows] = await db.execute(`
+                SELECT r.*, u.name, u.employee_id, u.department, u.role
+                FROM resignations r
+                JOIN users u ON r.user_id = u.id
+                ORDER BY r.id DESC
+            `);
+            res.json(Array.isArray(rows) ? rows : []);
+        } catch (error) {
+            console.error('Get Resignations Error:', error);
+            res.status(500).json({ error: 'Failed to fetch resignations' });
+        }
+    }
+
+    async updateResignationStatus(req, res) {
+        try {
+            const { id } = req.params;
+            const { status, admin_remarks } = req.body;
+            const allowed = ['Pending', 'Approved', 'Rejected'];
+            if (!allowed.includes(status)) {
+                return res.status(400).json({ error: 'Invalid status' });
+            }
+            await db.execute(
+                'UPDATE resignations SET status = ?, admin_remarks = ? WHERE id = ?',
+                [status, admin_remarks || null, id]
+            );
+            res.json({ success: true, message: `Resignation ${status}` });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update resignation' });
+        }
+    }
+
+    /**
+     * 11. OFFER LETTER MANAGEMENT (Fix #7 — was missing)
+     */
+    async getAllOffers(req, res) {
+        try {
+            const [rows] = await db.execute('SELECT * FROM offer_letters ORDER BY id DESC');
+            res.json(Array.isArray(rows) ? rows : []);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch offer letters' });
+        }
+    }
+
+    async createOffer(req, res) {
+        try {
+            const { candidate_name, position, department, joining_date, salary, remarks } = req.body;
+            if (!candidate_name || !position) {
+                return res.status(400).json({ error: 'Candidate name and position are required' });
+            }
+            await db.execute(
+                `INSERT INTO offer_letters (candidate_name, position, department, joining_date, salary, remarks, status)
+                 VALUES (?, ?, ?, ?, ?, ?, 'Issued')`,
+                [candidate_name, position, department || null, joining_date || null, salary || null, remarks || null]
+            );
+            res.status(201).json({ success: true, message: 'Offer letter created' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to create offer letter' });
+        }
+    }
+
+    async deleteOffer(req, res) {
+        try {
+            const { id } = req.params;
+            await db.execute('DELETE FROM offer_letters WHERE id = ?', [id]);
+            res.json({ success: true, message: 'Offer letter deleted' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to delete offer letter' });
         }
     }
 }

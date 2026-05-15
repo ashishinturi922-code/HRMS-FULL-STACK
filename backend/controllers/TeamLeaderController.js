@@ -1,4 +1,5 @@
 const db = require('../db');
+const bcrypt = require('bcrypt');
 
 class TeamLeaderController {
 
@@ -23,13 +24,8 @@ class TeamLeaderController {
 
             // Get ALL employees, team leaders, AND managers in ORGANIZATION
             const [allOrgRows] = await db.execute(
-                `SELECT COUNT(*) as total FROM users 
-                 WHERE role = 'Employee' 
-                    OR UPPER(TRIM(REPLACE(role, ' ', ''))) = 'TEAMLEADER'
-                    OR UPPER(TRIM(role)) = 'TEAM LEADER'
-                    OR role = 'TeamLeader'
-                    OR role = 'Team Leader'
-                    OR role = 'Manager'`
+                // ✅ FIX: Include Admin in total employee count
+                `SELECT COUNT(*) as total FROM users`
             );
 
             const totalOrganization = allOrgRows[0].total || 0;
@@ -59,19 +55,24 @@ class TeamLeaderController {
             );
 
             // Get leave count for employees, team leaders, AND managers in DEPARTMENT
+            // ✅ FIX: UNION both tables so Team Leaders are counted too
             const [leaveRows] = await db.execute(
-                `SELECT COUNT(*) as count FROM leave_requests l
-                 JOIN users u ON l.user_id = u.id
-                 WHERE u.department = ? 
-                 AND (u.role = 'Employee' 
-                      OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                      OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                      OR u.role = 'TeamLeader'
-                      OR u.role = 'Team Leader'
-                      OR u.role = 'Manager')
-                 AND l.status = 'Approved'
-                 AND CURRENT_DATE BETWEEN l.from_date AND l.to_date`,
-                [dept]
+                `SELECT COUNT(*) as count FROM (
+                    SELECT DISTINCT l.user_id AS uid
+                    FROM leave_requests l
+                    JOIN users u ON l.user_id = u.id
+                    WHERE u.department = ?
+                    AND l.status = 'Approved'
+                    AND CURRENT_DATE BETWEEN DATE(l.from_date) AND DATE(l.to_date)
+                    UNION
+                    SELECT DISTINCT tl.tl_user_id AS uid
+                    FROM tl_leave_requests tl
+                    JOIN users u ON tl.tl_user_id = u.id
+                    WHERE u.department = ?
+                    AND tl.status = 'Approved'
+                    AND CURRENT_DATE BETWEEN DATE(tl.from_date) AND DATE(tl.to_date)
+                ) AS combined`,
+                [dept, dept]
             );
 
             // Get total count for DEPARTMENT
@@ -89,7 +90,8 @@ class TeamLeaderController {
 
             const totalDept = deptTotalRows[0].total || 0;
             const onLeaveCount = leaveRows[0].count || 0;
-            const presentCount = totalDept - onLeaveCount;
+            // ✅ FIX: Use totalOrganization as the base so pie chart matches the stat card
+            const presentCount = Math.max(0, totalOrganization - onLeaveCount);
 
             res.json({
                 totalEmployees: totalOrganization,
@@ -98,7 +100,7 @@ class TeamLeaderController {
                 pendingTimesheets: timeRows[0].count || 0,
                 onLeaveCount: onLeaveCount,
                 attendanceStats: [
-                    { name: "Present", value: presentCount < 0 ? 0 : presentCount },
+                    { name: "Present", value: presentCount },
                     { name: "On Leave", value: onLeaveCount }
                 ]
             });
@@ -418,33 +420,81 @@ class TeamLeaderController {
 
     async updateProfile(req, res) {
         try {
-            const { userId, name, phone, personalEmail, officialEmail, address } = req.body;
+            // ✅ FIX: Frontend sends the full data object with snake_case DB column names
+            const body = req.body;
+            // Support both id (from URL param fallback) and explicit userId
+            const id = body.id || body.userId || req.params.id;
+
+            if (!id) return res.status(400).json({ error: 'User ID is required' });
+
+            const safeDob = (body.dob && body.dob.trim() !== '') ? body.dob : null;
+            const safeDoj = (body.doj && body.doj.trim() !== '') ? body.doj : null;
 
             await db.execute(
-                `UPDATE users 
-                 SET name=?, phone=?, personal_email=?, official_email=?, address=? 
+                `UPDATE users
+                 SET name=?, phone=?, alt_phone=?, personal_email=?,
+                     official_email=?, dob=?, doj=?, blood_group=?,
+                     gender=?, address=?
                  WHERE id=?`,
-                [name, phone, personalEmail, officialEmail, address, userId]
+                [
+                    body.name        || null,
+                    body.phone       || null,
+                    body.alt_phone   || null,
+                    body.personal_email  || null,
+                    body.official_email  || body.username || null,
+                    safeDob,
+                    safeDoj,
+                    body.blood_group || null,
+                    body.gender      || null,
+                    body.address     || null,
+                    id
+                ]
             );
 
-            res.json({ success: true });
+            res.json({ success: true, message: 'Profile updated successfully' });
         } catch (error) {
-            res.status(500).json({ error: "Update failed" });
+            console.error('TL updateProfile Error:', error);
+            res.status(500).json({ error: 'Update failed' });
         }
     }
 
     async updatePassword(req, res) {
         try {
-            const { userId, newPassword } = req.body;
+            // ✅ FIX: Frontend sends 'id', fallback to 'userId' for compatibility
+            const { currentPassword, newPassword } = req.body;
+            const userId = req.body.id || req.body.userId;
 
-            await db.execute(
-                'UPDATE users SET password = ? WHERE id = ?',
-                [newPassword, userId]
-            );
-
-            res.json({ success: true });
+            if (!userId || !newPassword) {
+                return res.status(400).json({ error: 'User ID and new password are required' });
+            }
+            const [rows] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+            if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+            if (currentPassword) {
+                const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
+                if (!isMatch) return res.status(401).json({ error: 'Current password is incorrect' });
+            }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+            res.json({ success: true, message: 'Password updated successfully' });
         } catch (error) {
-            res.status(500).json({ error: "Security update failed" });
+            console.error('Update Password Error:', error);
+            res.status(500).json({ error: 'Security update failed' });
+        }
+    }
+
+    // ✅ FIX: Upload profile photo for Team Leader
+    async uploadPhoto(req, res) {
+        try {
+            const { id } = req.params;
+            if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+            const photoUrl = `/uploads/profiles/${req.file.filename}`;
+            await db.execute('UPDATE users SET profile_photo = ? WHERE id = ?', [photoUrl, id]);
+
+            res.json({ success: true, photoUrl });
+        } catch (error) {
+            console.error("TL Upload Photo Error:", error);
+            res.status(500).json({ error: "Failed to upload photo" });
         }
     }
 
@@ -704,20 +754,27 @@ class TeamLeaderController {
 
             const dept = userDept[0].department;
 
+            // ✅ FIX: UNION both tables so Team Leaders (stored in tl_leave_requests)
+            //         appear alongside Employees (stored in leave_requests).
             const [employees] = await db.execute(
                 `SELECT u.id, u.name, u.employee_id, u.role
                  FROM leave_requests l
                  JOIN users u ON l.user_id = u.id
-                 WHERE u.department = ? 
-                 AND (u.role = 'Employee'
-                      OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                      OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                      OR u.role = 'TeamLeader'
-                      OR u.role = 'Team Leader'
-                      OR u.role = 'Manager')
+                 WHERE u.department = ?
                  AND l.status = 'Approved'
-                 AND ? BETWEEN l.from_date AND l.to_date`,
-                [dept, date]
+                 AND ? BETWEEN DATE(l.from_date) AND DATE(l.to_date)
+
+                 UNION
+
+                 SELECT u.id, u.name, u.employee_id, u.role
+                 FROM tl_leave_requests tl
+                 JOIN users u ON tl.tl_user_id = u.id
+                 WHERE u.department = ?
+                 AND tl.status = 'Approved'
+                 AND ? BETWEEN DATE(tl.from_date) AND DATE(tl.to_date)
+
+                 ORDER BY name ASC`,
+                [dept, date, dept, date]
             );
 
             res.json({ employees: employees || [] });
@@ -820,6 +877,125 @@ class TeamLeaderController {
             res.json(rows || []);
         } catch (error) {
             res.status(500).json({ error: "Failed to fetch timesheets" });
+        }
+    }
+
+    // Fix #7 — TL submits resignation
+    async submitResignation(req, res) {
+        try {
+            const { user_id, reason, last_working_date } = req.body;
+            if (!user_id || !reason) return res.status(400).json({ error: 'user_id and reason are required' });
+
+            const [existing] = await db.execute(
+                "SELECT id FROM resignations WHERE user_id = ? AND status IN ('Pending','Approved')",
+                [user_id]
+            );
+            if (existing.length) return res.status(409).json({ error: 'A resignation is already submitted' });
+
+            await db.execute(
+                "INSERT INTO resignations (user_id, reason, last_working_date, status) VALUES (?, ?, ?, 'Pending')",
+                [user_id, reason, last_working_date || null]
+            );
+            res.status(201).json({ success: true, message: 'Resignation submitted' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to submit resignation' });
+        }
+    }
+
+    // Fix #7 — TL views their offer letters
+    async getMyOffers(req, res) {
+        try {
+            const { tlId } = req.query;
+            const [userRows] = await db.execute('SELECT name FROM users WHERE id = ?', [tlId]);
+            if (!userRows.length) return res.status(404).json({ error: 'User not found' });
+
+            const [rows] = await db.execute(
+                "SELECT * FROM offer_letters WHERE candidate_name = ? ORDER BY id DESC",
+                [userRows[0].name]
+            );
+            res.json(rows || []);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch offers' });
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    // 🆕 TL WFH REQUEST WORKFLOW
+    // NOTE: WFH is stored in tl_wfh_requests (separate table).
+    //       getDashboardStats intentionally does NOT query this table
+    //       so WFH days never appear in the "On Leave" count.
+    // ══════════════════════════════════════════════
+
+    // ✅ APPLY WFH
+    async applyWFH(req, res) {
+        try {
+            const { tl_user_id, from_date, to_date, days, reason } = req.body;
+
+            if (!tl_user_id || !from_date || !to_date || !reason) {
+                return res.status(400).json({ error: "Missing required fields" });
+            }
+
+            const fromDay = new Date(from_date).getDay();
+            const toDay   = new Date(to_date).getDay();
+            if (fromDay === 0 || fromDay === 6) return res.status(400).json({ error: "Cannot apply WFH starting on a weekend" });
+            if (toDay   === 0 || toDay   === 6) return res.status(400).json({ error: "Cannot apply WFH ending on a weekend"   });
+
+            const calculatedDays = this.calculateWorkingDays(from_date, to_date);
+            if (calculatedDays === 0) return res.status(400).json({ error: "No working days in selected range" });
+
+            const [userRows] = await db.execute('SELECT department FROM users WHERE id = ?', [tl_user_id]);
+            if (!userRows.length) return res.status(404).json({ error: "Team Leader not found" });
+            const department = userRows[0].department;
+
+            const [mgrRows] = await db.execute(
+                'SELECT id FROM users WHERE department = ? AND role = "Manager" LIMIT 1',
+                [department]
+            );
+            if (!mgrRows.length) return res.status(400).json({ error: "No manager assigned to this department" });
+            const manager_id = mgrRows[0].id;
+
+            await db.execute(
+                `INSERT INTO tl_wfh_requests 
+                 (tl_user_id, department, from_date, to_date, days, reason, manager_id, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+                [tl_user_id, department, from_date, to_date, calculatedDays, reason, manager_id]
+            );
+
+            res.json({ success: true, message: `✅ WFH request submitted (${calculatedDays} days)` });
+        } catch (error) {
+            console.error("❌ Apply WFH Error:", error);
+            res.status(500).json({ error: "Failed to apply WFH", details: error.message });
+        }
+    }
+
+    // ✅ GET MY WFH REQUESTS
+    async getMyWFHRequests(req, res) {
+        try {
+            const { tlId } = req.params;
+            if (!tlId) return res.status(400).json({ error: "Team Leader ID is required" });
+
+            const [rows] = await db.execute(
+                `SELECT * FROM tl_wfh_requests WHERE tl_user_id = ? ORDER BY created_at DESC`,
+                [tlId]
+            );
+            res.json(rows || []);
+        } catch (error) {
+            res.status(500).json({ error: "Failed to fetch WFH requests" });
+        }
+    }
+
+    // ✅ DELETE WFH REQUEST
+    async deleteWFHRequest(req, res) {
+        try {
+            const { wfhId } = req.params;
+            const [rows] = await db.execute('SELECT status FROM tl_wfh_requests WHERE id = ?', [wfhId]);
+            if (!rows.length) return res.status(404).json({ error: "WFH request not found" });
+            if (rows[0].status !== "Pending") return res.status(400).json({ error: "Can only delete pending requests" });
+
+            await db.execute('DELETE FROM tl_wfh_requests WHERE id = ?', [wfhId]);
+            res.json({ success: true, message: "✅ WFH request cancelled" });
+        } catch (error) {
+            res.status(500).json({ error: "Failed to delete WFH request" });
         }
     }
 }

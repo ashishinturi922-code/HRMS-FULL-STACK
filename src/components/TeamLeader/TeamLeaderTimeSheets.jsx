@@ -1,118 +1,80 @@
 import React, { useState, useEffect } from "react";
 import "./TeamLeaderTimeSheets.css";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import { FaEye, FaCheck, FaTimes, FaTasks, FaClock } from "react-icons/fa";
-import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
+import { FaEye, FaTasks, FaClock, FaDownload, FaEdit, FaChevronRight } from "react-icons/fa";
+import API_URL from "../../apiConfig";
 
 const TeamLeaderTimeSheets = () => {
-  const [activeTab, setActiveTab] = useState("timesheets");
+  const [activeTab, setActiveTab]       = useState("timesheets");
   const [activeSubTab, setActiveSubTab] = useState("submit");
-  
-  const [projects, setProjects] = useState([]);
+
+  const [projects, setProjects]     = useState([]);
   const [timesheets, setTimesheets] = useState([]);
-  const [editId, setEditId] = useState(null);
+  const [editId, setEditId]         = useState(null);
 
-  const [filter, setFilter] = useState({ year: "", month: "", week: "" });
+  const [filter, setFilter]               = useState({ year: "", month: "", week: "" });
   const [summaryFilter, setSummaryFilter] = useState({ from: "", to: "" });
-
-  const [viewDesc, setViewDesc] = useState("");
+  const [viewDesc, setViewDesc]           = useState("");
 
   const currentUser = JSON.parse(localStorage.getItem("user")) || {
-    id: 1079,
-    name: "TeamLeader",
+    id: 1079, name: "TeamLeader",
   };
 
   const [formData, setFormData] = useState({
     user_id: currentUser.id,
     name: currentUser.name,
     entryDate: new Date().toISOString().split("T")[0],
-    taskDate: "",
-    project: "",
-    task: "",
-    hours: "",
-    description: "",
-    status: "Pending"
+    taskDate: "", project: "", task: "", hours: "", description: "", status: "Pending"
   });
 
- useEffect(() => {
-  loadTimesheets();
-  loadProjects();   
-}, [currentUser.id]);
+  useEffect(() => {
+    loadTimesheets();
+    loadProjects();
+  }, [currentUser.id]);
 
   const loadTimesheets = async () => {
     try {
-      // ✅ FIX: Using API_URL instead of process.env
-      const resPending = await fetch(`${API_URL}/api/teamleader/timesheets/pending/${currentUser.id}`);
+      const [resPending, resMy] = await Promise.all([
+        fetch(`${API_URL}/api/teamleader/timesheets/pending/${currentUser.id}`),
+        fetch(`${API_URL}/api/teamleader/my-timesheets/${currentUser.id}`)
+      ]);
       const teamData = await resPending.json();
-      
-      // ✅ FIX: Using API_URL instead of process.env
-      const resMy = await fetch(`${API_URL}/api/teamleader/my-timesheets/${currentUser.id}`);
-      const myData = await resMy.json();
+      const myData   = await resMy.json();
 
-      const safeTeamData = Array.isArray(teamData) ? teamData : [];
-      const safeMyData = Array.isArray(myData) ? myData : [];
+      const safeTeam = Array.isArray(teamData) ? teamData : [];
+      const safeMy   = Array.isArray(myData)   ? myData   : [];
 
-      setTimesheets((prev) => {
-        // PERMANENT FIX: Merge new data but KEEP approved records in state
-        // This ensures they don't disappear when the 'pending' API stops sending them
-        const newIds = new Set([...safeMyData, ...safeTeamData].map(t => t.id));
-        const approvedRecords = prev.filter(t => !newIds.has(t.id) && (t.status === "Approved" || t.status === "Rejected"));
-        
-        return [...safeMyData, ...safeTeamData, ...approvedRecords];
+      setTimesheets(prev => {
+        const newIds = new Set([...safeMy, ...safeTeam].map(t => t.id));
+        const retained = prev.filter(t => !newIds.has(t.id) && (t.status === "Approved" || t.status === "Rejected"));
+        return [...safeMy, ...safeTeam, ...retained];
       });
-    } catch (err) {
-      console.error("Load Error:", err);
-    }
-  };
-
-  const handleStatusChange = async (id, status) => {
-    try {
-      // ✅ FIX: Using API_URL instead of process.env
-      const res = await fetch(`${API_URL}/api/teamleader/timesheets/status/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
-      });
-      
-      if(res.ok) {
-        // PERMANENT FIX: Update local state immediately so it persists in the UI
-        setTimesheets(prev => 
-          prev.map(t => t.id === id ? { ...t, status: status } : t)
-        );
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error("Load Error:", err); }
   };
 
   const loadProjects = async () => {
     if (!currentUser?.id) return;
-
     try {
-      // ✅ FIX: Using API_URL instead of process.env
-      const res = await fetch(
-        `${API_URL}/api/teamleader/projects/${currentUser.id}`
-      );
+      const res  = await fetch(`${API_URL}/api/teamleader/projects/${currentUser.id}`);
       const data = await res.json();
-
       setProjects(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Project Fetch Error:", err);
-    }
+    } catch (err) { console.error("Project Fetch Error:", err); }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleStatusChange = async (id, status) => {
+    try {
+      const res = await fetch(`${API_URL}/api/teamleader/timesheets/status/${id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) setTimesheets(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    } catch (err) { console.error(err); }
   };
 
-  const handleFilterChange = (e) => {
-    setFilter({ ...filter, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSummaryFilter = (e) => {
-    setSummaryFilter({ ...summaryFilter, [e.target.name]: e.target.value });
-  };
+  const handleFilterChange       = (e) => setFilter({ ...filter, [e.target.name]: e.target.value });
+  const handleSummaryFilterChange = (e) => setSummaryFilter({ ...summaryFilter, [e.target.name]: e.target.value });
 
   const getWeekNumber = (dateString) => {
     if (!dateString) return null;
@@ -125,90 +87,70 @@ const TeamLeaderTimeSheets = () => {
     if (!year || !month) return [];
     const weeks = new Set();
     const daysInMonth = new Date(year, month, 0).getDate();
-    for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(year, month - 1, i);
-      weeks.add(getWeekNumber(date));
-    }
+    for (let i = 1; i <= daysInMonth; i++) weeks.add(getWeekNumber(new Date(year, month - 1, i)));
     return Array.from(weeks);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.taskDate || !formData.project || !formData.task || !formData.hours) {
-      alert("Please fill all fields");
-      return;
+      alert("Please fill all fields"); return;
     }
-
-    const today = new Date();
+    const today    = new Date();
     const selected = new Date(formData.taskDate);
-
-    const format = (d) => d.toISOString().split("T")[0];
-
-    if (format(selected) > format(today)) {
-      alert("You cannot submit future timesheets");
-      return;
-    }
+    const fmt = (d) => d.toISOString().split("T")[0];
+    if (fmt(selected) > fmt(today)) { alert("You cannot submit future timesheets"); return; }
 
     const payload = {
-        id: editId,
-        user_id: currentUser.id,
-        project: formData.project,
-        task: formData.task,
-        hours: formData.hours,
-        description: formData.description,
-        task_date: formData.taskDate
+      id: editId, user_id: currentUser.id,
+      project: formData.project, task: formData.task,
+      hours: formData.hours, description: formData.description,
+      task_date: formData.taskDate
     };
-
     try {
-      // ✅ FIX: Using API_URL instead of process.env
       const res = await fetch(`${API_URL}/api/teamleader/save-timesheet`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
-      if(res.ok) {
+      if (res.ok) {
         alert("Timesheet Saved ✅");
         setEditId(null);
         setFormData({ ...formData, taskDate: "", project: "", task: "", hours: "", description: "" });
         loadTimesheets();
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handleEdit = (item) => {
     setFormData({
-        ...formData,
-        project: item.project,
-        task: item.task,
-        hours: item.hours,
-        description: item.description,
-        taskDate: new Date(item.task_date).toISOString().split('T')[0]
+      ...formData,
+      project: item.project, task: item.task,
+      hours: item.hours, description: item.description,
+      taskDate: new Date(item.task_date).toISOString().split("T")[0]
     });
     setEditId(item.id);
     setActiveSubTab("submit");
   };
 
-  const myData = timesheets.filter((t) => t.user_id === currentUser.id);
+  const myData = timesheets.filter(t => t.user_id === currentUser.id);
 
-  const filteredData = myData.filter((t) => {
+  const filteredData = myData.filter(t => {
     const d = new Date(t.task_date);
-    if (filter.year && d.getFullYear() !== Number(filter.year)) return false;
-    if (filter.month && d.getMonth() + 1 !== Number(filter.month)) return false;
-    if (filter.week && getWeekNumber(t.task_date) !== Number(filter.week)) return false;
+    if (filter.year  && d.getFullYear()   !== Number(filter.year))  return false;
+    if (filter.month && d.getMonth() + 1  !== Number(filter.month)) return false;
+    if (filter.week  && getWeekNumber(t.task_date) !== Number(filter.week)) return false;
     return true;
   });
 
-  const summaryData = myData.filter((t) => {
+  const summaryData  = myData.filter(t => {
     const d = new Date(t.task_date);
     if (summaryFilter.from && d < new Date(summaryFilter.from)) return false;
-    if (summaryFilter.to && d > new Date(summaryFilter.to)) return false;
+    if (summaryFilter.to   && d > new Date(summaryFilter.to))   return false;
     return true;
   });
-
-  const totalHours = summaryData.reduce((a, b) => a + Number(b.hours), 0);
+  const totalHours   = summaryData.reduce((a, b) => a + Number(b.hours), 0);
+  const teamData     = timesheets.filter(t => t.user_id !== currentUser.id);
+  const pendingCount = teamData.filter(t => t.status === "Pending").length;
 
   const downloadReport = () => {
     const ws = XLSX.utils.json_to_sheet(myData);
@@ -218,187 +160,340 @@ const TeamLeaderTimeSheets = () => {
   };
 
   const downloadEmployeeReport = () => {
-    const employeeData = timesheets.filter(t => t.user_id !== currentUser.id);
-    const ws = XLSX.utils.json_to_sheet(employeeData);
+    const ws = XLSX.utils.json_to_sheet(teamData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TeamTimesheets");
     XLSX.writeFile(wb, "Team_Timesheet_Report.xlsx");
   };
 
-  return (
-    <div className="page-container">
-      <h2>Team Leader TimeSheets</h2>
+  const StatusBadge = ({ status }) => (
+    <span className={`tl-badge ${status?.toLowerCase()}`}>{status}</span>
+  );
 
-      <div className="tabs">
-        <button className={activeTab === "timesheets" ? "active" : ""} onClick={() => setActiveTab("timesheets")}>TimeSheets</button>
-        <button className={activeTab === "reports" ? "active" : ""} onClick={() => setActiveTab("reports")}>Reports</button>
-        <button className={activeTab === "employee" ? "active" : ""} onClick={() => setActiveTab("employee")}>Employee TimeSheets</button>
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  return (
+    <div className="tl-page">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="tl-page-header">
+        <div>
+          <h1>Team Leader TimeSheets</h1>
+          <p className="tl-subtitle">Manage your entries and approve team submissions</p>
+        </div>
+        <div className="tl-user-chip">
+          <div className="tl-avatar">{(currentUser.name || "T")[0]}</div>
+          <div>
+            <span className="tl-user-name">{currentUser.name}</span>
+            <span className="tl-user-id">{currentUser.employee_id || currentUser.id}</span>
+          </div>
+        </div>
       </div>
 
+      {/* ── MAIN TABS ── */}
+      <div className="tl-tabs">
+        {[
+          { key: "timesheets", label: "My TimeSheets" },
+          { key: "employee",   label: "Team TimeSheets", badge: pendingCount },
+          { key: "reports",    label: "Reports" },
+        ].map(t => (
+          <button
+            key={t.key}
+            className={`tl-tab ${activeTab === t.key ? "active" : ""}`}
+            onClick={() => setActiveTab(t.key)}
+          >
+            {t.label}
+            {t.badge > 0 && <span className="tl-tab-badge">{t.badge}</span>}
+            {activeTab === t.key && <span className="tl-tab-line" />}
+          </button>
+        ))}
+      </div>
+
+      {/* ══════════════════════════════════════════
+          TAB: MY TIMESHEETS
+      ══════════════════════════════════════════ */}
       {activeTab === "timesheets" && (
         <>
-          <div className="sub-tabs">
-            <button onClick={() => setActiveSubTab("submit")}>Submit</button>
-            <button onClick={() => setActiveSubTab("weekly")}>History</button>
-            <button onClick={() => setActiveSubTab("summary")}>Summary</button>
+          <div className="tl-sub-tabs">
+            {[
+              { key: "submit",  label: "Submit Entry" },
+              { key: "weekly",  label: "History" },
+              { key: "summary", label: "Summary" },
+            ].map(t => (
+              <button
+                key={t.key}
+                className={`tl-sub-tab ${activeSubTab === t.key ? "active" : ""}`}
+                onClick={() => setActiveSubTab(t.key)}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
+          {/* ── SUBMIT FORM ── */}
           {activeSubTab === "submit" && (
-            <form className="form-card" onSubmit={handleSubmit}>
-              <div className="form-section">
-                <h3>Your Details</h3>
-                <div className="grid-3">
-                  <input value={formData.name} disabled />
-                  <input value={currentUser.employee_id || currentUser.id} disabled />
-                  <input value={formData.entryDate} disabled />
+            <form className="tl-form-card" onSubmit={handleSubmit}>
+              {editId !== null && (
+                <div className="tl-edit-banner">
+                  <FaEdit /> Editing entry — save to apply changes.
+                  <button type="button" className="tl-cancel-edit" onClick={() => {
+                    setEditId(null);
+                    setFormData({ ...formData, taskDate: "", project: "", task: "", hours: "", description: "" });
+                  }}>Cancel</button>
                 </div>
+              )}
+
+              <div className="tl-section-label">Your Details</div>
+              <div className="tl-info-row">
+                <div className="tl-info-field"><span className="tl-info-key">Name</span><span className="tl-info-val">{formData.name}</span></div>
+                <div className="tl-info-field"><span className="tl-info-key">Employee ID</span><span className="tl-info-val">{currentUser.employee_id || currentUser.id}</span></div>
+                <div className="tl-info-field"><span className="tl-info-key">Entry Date</span><span className="tl-info-val">{formData.entryDate}</span></div>
               </div>
-              <div className="form-section">
-                <h3>Task Details</h3>
-                <div className="grid-2">
-                  <input
-                    type="date"
-                    name="taskDate"
-                    value={formData.taskDate}
-                    onChange={handleChange}
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <select name="project" value={formData.project} onChange={handleChange}>
+
+              <div className="tl-divider" />
+              <div className="tl-section-label">Task Details</div>
+
+              <div className="tl-grid-2">
+                <div className="tl-field">
+                  <label>Task Date <span className="req">*</span></label>
+                  <input type="date" name="taskDate" value={formData.taskDate}
+                    onChange={handleChange} max={new Date().toISOString().split("T")[0]} required />
+                </div>
+                <div className="tl-field">
+                  <label>Project <span className="req">*</span></label>
+                  <select name="project" value={formData.project} onChange={handleChange} required>
                     <option value="">Select Project</option>
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.projectName || p.name}>
-                        {p.projectName || p.name}
-                      </option>
+                    {projects.map(p => (
+                      <option key={p.id} value={p.projectName || p.name}>{p.projectName || p.name}</option>
                     ))}
                   </select>
-                  <input name="task" value={formData.task} onChange={handleChange} placeholder="Task" />
-                  <input type="number" name="hours" value={formData.hours} onChange={handleChange} placeholder="Hours" />
                 </div>
-                <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" />
+                <div className="tl-field">
+                  <label>Task <span className="req">*</span></label>
+                  <input name="task" value={formData.task} onChange={handleChange} placeholder="What did you work on?" required />
+                </div>
+                <div className="tl-field">
+                  <label>Hours <span className="req">*</span></label>
+                  <input type="number" name="hours" value={formData.hours} onChange={handleChange}
+                    placeholder="e.g. 4" min="0.5" step="0.5" required />
+                </div>
               </div>
-              <button className="submit-btn" type="submit">{editId !== null ? "Update" : "Submit"}</button>
+
+              <div className="tl-field" style={{ marginTop: "16px" }}>
+                <label>Description</label>
+                <textarea name="description" value={formData.description} onChange={handleChange}
+                  placeholder="Optional notes…" rows={3} />
+              </div>
+
+              <div className="tl-form-footer">
+                <button className="tl-submit-btn" type="submit">
+                  {editId !== null ? "Update Entry" : "Submit Entry"}
+                  <FaChevronRight size={12} />
+                </button>
+              </div>
             </form>
           )}
 
+          {/* ── HISTORY ── */}
           {activeSubTab === "weekly" && (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr><th>Project</th><th>Task</th><th>Hours</th><th>Date</th><th>Status</th><th>Action</th></tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((t) => (
-                    <tr key={t.id}>
-                      <td>{t.project}</td><td>{t.task}</td><td>{t.hours}</td>
-                      <td>{new Date(t.task_date).toLocaleDateString()}</td>
-                      <td>{t.status}</td>
-                      <td>{t.status !== "Approved" && <button onClick={()=>handleEdit(t)}>Edit</button>}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="tl-card">
+              <div className="tl-card-header">
+                <h3>Timesheet History</h3>
+                <div className="tl-filter-row">
+                  <select name="year" value={filter.year} onChange={handleFilterChange}>
+                    <option value="">Year</option>
+                    {[2024,2025,2026].map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <select name="month" value={filter.month} onChange={handleFilterChange}>
+                    <option value="">Month</option>
+                    {MONTHS.map((m,i) => <option key={i} value={i+1}>{m}</option>)}
+                  </select>
+                  <select name="week" value={filter.week} onChange={handleFilterChange}
+                    disabled={!filter.month || !filter.year}>
+                    <option value="">All Weeks</option>
+                    {filter.year && filter.month && getWeeksInMonth(filter.year, filter.month).map(w => (
+                      <option key={w} value={w}>Week {w}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="tl-table-wrap">
+                <table className="tl-table">
+                  <thead>
+                    <tr><th>Project</th><th>Task</th><th>Hours</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.length > 0 ? filteredData.map(t => (
+                      <tr key={t.id}>
+                        <td><span className="tl-project-pill">{t.project}</span></td>
+                        <td>{t.task}</td>
+                        <td><strong>{t.hours}h</strong></td>
+                        <td>{new Date(t.task_date).toLocaleDateString()}</td>
+                        <td><StatusBadge status={t.status} /></td>
+                        <td>
+                          {t.status !== "Approved" && (
+                            <button className="tl-icon-btn" onClick={() => handleEdit(t)}>
+                              <FaEdit /> Edit
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan="6" className="tl-empty">No entries match the selected filters.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
+          {/* ── SUMMARY ── */}
           {activeSubTab === "summary" && (
-            <div className="table-container">
-              <div className="filter-row">
-                <input type="date" name="from" value={summaryFilter.from} onChange={handleSummaryFilter} />
-                <input type="date" name="to" value={summaryFilter.to} onChange={handleSummaryFilter} />
+            <div className="tl-card">
+              <div className="tl-card-header">
+                <h3>Summary</h3>
+                <div className="tl-filter-row">
+                  <label style={{fontSize:"13px",color:"#64748b"}}>From</label>
+                  <input type="date" name="from" value={summaryFilter.from} onChange={handleSummaryFilterChange} />
+                  <label style={{fontSize:"13px",color:"#64748b"}}>To</label>
+                  <input type="date" name="to" value={summaryFilter.to} onChange={handleSummaryFilterChange} />
+                </div>
               </div>
-              <div className="summary-cards">
-                <div className="card"><FaTasks /><h4>Total Entries</h4><p>{summaryData.length}</p></div>
-                <div className="card"><FaClock /><h4>Total Hours</h4><p>{totalHours}</p></div>
+
+              <div className="tl-stat-row">
+                <div className="tl-stat-card">
+                  <FaTasks className="tl-stat-icon blue" />
+                  <div>
+                    <div className="tl-stat-num">{summaryData.length}</div>
+                    <div className="tl-stat-label">Total Entries</div>
+                  </div>
+                </div>
+                <div className="tl-stat-card">
+                  <FaClock className="tl-stat-icon green" />
+                  <div>
+                    <div className="tl-stat-num">{totalHours}h</div>
+                    <div className="tl-stat-label">Total Hours</div>
+                  </div>
+                </div>
               </div>
-              <table className="table">
-                <thead>
-                  <tr><th>Project</th><th>Task</th><th>Date</th><th>Hours</th><th>Status</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                  {summaryData.length > 0 ? (
-                    summaryData.map((t) => (
+
+              <div className="tl-table-wrap">
+                <table className="tl-table">
+                  <thead>
+                    <tr><th>Project</th><th>Task</th><th>Date</th><th>Hours</th><th>Status</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    {summaryData.length > 0 ? summaryData.map(t => (
                       <tr key={t.id}>
-                        <td>{t.project}</td>
+                        <td><span className="tl-project-pill">{t.project}</span></td>
                         <td>{t.task}</td>
                         <td>{new Date(t.task_date).toLocaleDateString()}</td>
-                        <td>{t.hours}</td>
-                        <td><span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span></td>
-                        <td>{t.description || "-"}</td>
+                        <td><strong>{t.hours}h</strong></td>
+                        <td><StatusBadge status={t.status} /></td>
+                        <td className="tl-desc-cell">{t.description || <span style={{color:"#94a3b8"}}>—</span>}</td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="6" style={{ textAlign: "center" }}>No records found</td></tr>
-                  )}
-                </tbody>
-              </table>
+                    )) : (
+                      <tr><td colSpan="6" className="tl-empty">No records in selected range.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>
       )}
 
-      {activeTab === "reports" && (
-        <div className="report-card">
-          <button className="download-btn" onClick={downloadReport}>Download My Report</button>
-        </div>
-      )}
-
+      {/* ══════════════════════════════════════════
+          TAB: TEAM TIMESHEETS
+      ══════════════════════════════════════════ */}
       {activeTab === "employee" && (
-        <div className="table-card">
-          <h3>Team Management</h3>
-          <button className="download-btn" onClick={downloadEmployeeReport}>Download Team Report</button>
-          <table className="table">
-            <thead>
-              <tr><th>EMP ID</th><th>NAME</th><th>PROJECT</th><th>TASK</th><th>DATE</th><th>HOURS</th><th>STATUS</th><th>ACTION</th></tr>
-            </thead>
-            <tbody>
-              {timesheets.filter(t => t.user_id !== currentUser.id).map((t) => (
-                <tr key={t.id}>
-                  {/* PERMANENT ID FIX: Checks for 'employee_id' or 'emp_id' sent from your DTO join */}
-                  <td>{t.employee_id || t.emp_id || t.employeeId || t.user_id}</td>
-                  <td>{t.employeeName || t.name || "Employee"}</td>
-                  <td>{t.project}</td><td>{t.task}</td>
-                  <td>{new Date(t.task_date).toLocaleDateString()}</td>
-                  <td>{t.hours}</td>
-                  <td>
-                    <span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span>
-                    <FaEye style={{ marginLeft: "10px", cursor: "pointer", color: "#2563eb" }} onClick={() => setViewDesc(t.description)} />
-                  </td>
-                  <td>
-                    {t.status === "Pending" ? (
-                      <>
-                        <button
-                          className="approve-btn"
-                          onClick={() => handleStatusChange(t.id, "Approved")}
-                        >
-                          Approve
-                        </button>
+        <div className="tl-card">
+          <div className="tl-card-header">
+            <h3>
+              <span className="tl-dot green" />
+              Team Timesheets
+              {pendingCount > 0 && (
+                <span className="tl-pending-badge">{pendingCount} need approval</span>
+              )}
+            </h3>
+            <button className="tl-dl-btn" onClick={downloadEmployeeReport}>
+              <FaDownload /> Export Team
+            </button>
+          </div>
 
-                        <button
-                          className="reject-btn"
-                          onClick={() => handleStatusChange(t.id, "Rejected")}
-                        >
-                          Deny
-                        </button>
-                      </>
-                    ) : (
-                      <span style={{color: t.status === "Approved" ? "green" : "red", fontWeight: "bold"}}>{t.status}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="tl-table-wrap">
+            <table className="tl-table">
+              <thead>
+                <tr><th>Emp ID</th><th>Name</th><th>Project</th><th>Task</th><th>Date</th><th>Hours</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {teamData.length > 0 ? teamData.map(t => (
+                  <tr key={t.id}>
+                    <td className="tl-mono">{t.employee_id || t.emp_id || t.user_id}</td>
+                    <td><strong>{t.employeeName || t.name || "Employee"}</strong></td>
+                    <td><span className="tl-project-pill">{t.project}</span></td>
+                    <td>{t.task}</td>
+                    <td>{new Date(t.task_date).toLocaleDateString()}</td>
+                    <td><strong>{t.hours}h</strong></td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <StatusBadge status={t.status} />
+                        {t.description && (
+                          <FaEye
+                            style={{ cursor: "pointer", color: "#94a3b8", fontSize: "13px" }}
+                            title="View description"
+                            onClick={() => setViewDesc(t.description)}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {t.status === "Pending" ? (
+                        <div className="tl-action-pair">
+                          <button className="tl-approve-btn" onClick={() => handleStatusChange(t.id, "Approved")}>Approve</button>
+                          <button className="tl-reject-btn"  onClick={() => handleStatusChange(t.id, "Rejected")}>Deny</button>
+                        </div>
+                      ) : (
+                        <span className="tl-done-text">{t.status}</span>
+                      )}
+                    </td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="8" className="tl-empty">No team timesheets found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
+      {/* ══════════════════════════════════════════
+          TAB: REPORTS
+      ══════════════════════════════════════════ */}
+      {activeTab === "reports" && (
+        <div className="tl-card tl-report-card">
+          <h3>Download Reports</h3>
+          <p>Export your personal or team timesheet data as Excel files.</p>
+          <div className="tl-report-btns">
+            <button className="tl-submit-btn" onClick={downloadReport}>
+              <FaDownload /> My Timesheet Report
+            </button>
+            <button className="tl-dl-btn" onClick={downloadEmployeeReport}>
+              <FaDownload /> Team Report
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── DESCRIPTION MODAL ── */}
       {viewDesc && (
-        <div className="modal">
-          <div className="modal-content">
+        <div className="tl-modal-overlay" onClick={() => setViewDesc("")}>
+          <div className="tl-modal" onClick={e => e.stopPropagation()}>
             <h3>Task Description</h3>
             <p>{viewDesc}</p>
-            <button onClick={() => setViewDesc("")}>Close</button>
+            <button className="tl-modal-close" onClick={() => setViewDesc("")}>Close</button>
           </div>
-        </div> 
+        </div>
       )}
     </div>
   );

@@ -10,7 +10,8 @@ const TeamLeaderProfile = () => {
   const [data, setData] = useState({});
   const [user, setUser] = useState(null);
 
-  const API_BASE = `${process.env.REACT_APP_API_URL}`;
+  // ✅ FIX 1: Safe fallback so URL never becomes "undefined/api/..."
+  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     fetchProfile();
@@ -25,15 +26,17 @@ const TeamLeaderProfile = () => {
       const result = await response.json();
 
       if (response.ok) {
-        // ✅ Format dates for HTML inputs
         setData({
           ...result,
-          dob: result.dob ? result.dob.split('T')[0] : "",
-          doj: result.doj ? result.doj.split('T')[0] : ""
+          dob: result.dob ? result.dob.split("T")[0] : "",
+          doj: result.doj ? result.doj.split("T")[0] : ""
         });
         setUser(result);
-        // ✅ Construct full URL for the image or use default icon
-        setImagePreview(result.profile_photo ? `${API_BASE}${result.profile_photo}` : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png");
+        setImagePreview(
+          result.profile_photo
+            ? `${API_BASE}${result.profile_photo}`
+            : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+        );
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -42,29 +45,42 @@ const TeamLeaderProfile = () => {
 
   const handleSaveAll = async () => {
     try {
-      // 1. Save Text Data (includes all fields in the 'data' state)
-      const textResponse = await fetch(`${API_BASE}/api/teamleader/profile/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      // ✅ FIX 2: Backend registers PUT /api/teamleader/update-profile
+      // There is NO /api/teamleader/upload-photo route in index.js.
+      // Photo is sent as base64 inside the profile update payload instead.
 
-      // 2. Upload Photo if a new file was selected
+      let photoBase64 = null;
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("photo", selectedFile);
-        await fetch(`${API_BASE}/api/teamleader/upload-photo/${user.id}`, {
-          method: "POST",
-          body: formData,
+        photoBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(selectedFile);
         });
       }
+
+      const payload = {
+        id: user.id,
+        ...data,
+        ...(photoBase64 && { profile_photo: photoBase64 })
+      };
+
+      const textResponse = await fetch(`${API_BASE}/api/teamleader/update-profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
       if (textResponse.ok) {
         alert("Profile Updated Successfully! ✅");
         setEdit(false);
-        fetchProfile(); // Refresh to get fresh DB state
+        setSelectedFile(null);
+        fetchProfile();
+      } else {
+        const err = await textResponse.json();
+        alert("Failed to save: " + (err.error || "Unknown error"));
       }
     } catch (err) {
+      console.error("Save error:", err);
       alert("Error saving profile.");
     }
   };
@@ -78,39 +94,70 @@ const TeamLeaderProfile = () => {
       <div className="profile-header">
         <div className="profile-left">
           <div className="profile-img-wrapper">
-            <img 
-              src={imagePreview} 
-              alt="Avatar" 
+            <img
+              src={imagePreview}
+              alt="Avatar"
               className={edit ? "editing-img" : ""}
-              onError={(e) => { e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+              onError={(e) => {
+                e.target.src =
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+              }}
             />
             {edit && (
               <label className="photo-edit-overlay">
                 <FaCamera />
-                <input type="file" accept="image/*" hidden onChange={(e) => {
-                  const file = e.target.files[0];
-                  if(file) {
-                    setSelectedFile(file);
-                    setImagePreview(URL.createObjectURL(file));
-                  }
-                }} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setSelectedFile(file);
+                      setImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
               </label>
             )}
           </div>
           <div>
             <h2>{data.name || "User Name"}</h2>
-            <p>{data.role || "Team Leader"} | {data.department || "Sales"}</p>
+            <p>
+              {data.role || "Team Leader"} | {data.department || "Sales"}
+            </p>
           </div>
         </div>
 
-        <button className="edit-btn" onClick={() => edit ? handleSaveAll() : setEdit(true)}>
-          {edit ? <><FaSave /> Save</> : <><FaEdit /> Edit</>}
+        <button
+          className="edit-btn"
+          onClick={() => (edit ? handleSaveAll() : setEdit(true))}
+        >
+          {edit ? (
+            <>
+              <FaSave /> Save
+            </>
+          ) : (
+            <>
+              <FaEdit /> Edit
+            </>
+          )}
         </button>
       </div>
 
       <div className="tabs">
-        <button className={activeTab === "overview" ? "active" : ""} onClick={() => setActiveTab("overview")}>Overview</button>
-        <button className={activeTab === "documents" ? "active" : ""} onClick={() => setActiveTab("documents")}>Documents</button>
+        <button
+          className={activeTab === "overview" ? "active" : ""}
+          onClick={() => setActiveTab("overview")}
+        >
+          Overview
+        </button>
+        <button
+          className={activeTab === "documents" ? "active" : ""}
+          onClick={() => setActiveTab("documents")}
+        >
+          Documents
+        </button>
       </div>
 
       <div className="tab-content">
@@ -118,42 +165,84 @@ const TeamLeaderProfile = () => {
           <div className="form-grid">
             <div className="form-group">
               <label>Full Name</label>
-              <input name="name" value={data.name || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                name="name"
+                value={data.name || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Phone Number</label>
-              <input name="phone" value={data.phone || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                name="phone"
+                value={data.phone || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Alternate Phone</label>
-              <input name="alt_phone" value={data.alt_phone || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                name="alt_phone"
+                value={data.alt_phone || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Personal Email</label>
-              <input name="personal_email" value={data.personal_email || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                name="personal_email"
+                value={data.personal_email || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Date of Birth</label>
-              <input type="date" name="dob" value={data.dob || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                type="date"
+                name="dob"
+                value={data.dob || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Date of Joining</label>
-              <input type="date" name="doj" value={data.doj || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                type="date"
+                name="doj"
+                value={data.doj || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Blood Group</label>
-              <input name="blood_group" value={data.blood_group || ""} onChange={handleChange} disabled={!edit} />
+              <input
+                name="blood_group"
+                value={data.blood_group || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
 
             <div className="form-group">
               <label>Gender</label>
-              <select name="gender" value={data.gender || ""} onChange={handleChange} disabled={!edit}>
+              <select
+                name="gender"
+                value={data.gender || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              >
                 <option value="">Select</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -163,7 +252,12 @@ const TeamLeaderProfile = () => {
 
             <div className="form-group full-width">
               <label>Address</label>
-              <textarea name="address" value={data.address || ""} onChange={handleChange} disabled={!edit} />
+              <textarea
+                name="address"
+                value={data.address || ""}
+                onChange={handleChange}
+                disabled={!edit}
+              />
             </div>
           </div>
         )}

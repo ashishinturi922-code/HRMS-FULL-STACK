@@ -1,443 +1,166 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import API_URL from "../../apiConfig"; // ✅ FIX: Imported the working API config
+import API_URL from "../../apiConfig";
 import "./ManagerLeaveApprovals.css";
 
 const ManagerLeaveApprovals = () => {
-  const currentUser = JSON.parse(localStorage.getItem("user")) || {
-    id: 1,
-    role: "Manager"
-  };
+  const currentUser = JSON.parse(localStorage.getItem("user")) || { id: 1, role: "Manager" };
 
   const [leaves, setLeaves] = useState([]);
   const [tlLeaves, setTlLeaves] = useState([]);
-  const [activeTab, setActiveTab] = useState("employee"); // "employee" or "teamleader"
-  const [rejectIndex, setRejectIndex] = useState(null);
-  const [rejectReason, setRejectReason] = useState("");
-  const [selectedLeave, setSelectedLeave] = useState(null);
-  const [approvalStatus, setApprovalStatus] = useState("");
-  const [managerReason, setManagerReason] = useState("");
+  const [empWfh, setEmpWfh] = useState([]);
+  const [tlWfh, setTlWfh] = useState([]);
+  const [activeTab, setActiveTab] = useState("employee_leave"); 
   const [loading, setLoading] = useState(false);
 
-  // ✅ FETCH EMPLOYEE LEAVES
-  const fetchEmployeeLeaves = useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     try {
-      // ✅ FIX: Replaced broken env variable with API_URL
-      const res = await axios.get(`${API_URL}/api/manager/pending-approvals`);
-      
-      // The logic here ensures the Manager sees:
-      // 1. Employee leaves that are 'TL Approved' (which means they were > 2 days)
-      // 2. Or standard Pending leaves if your backend logic directs them here
-      const filtered = res.data.filter(l =>
-        l.role === "Employee" || 
-        (l.role === "TeamLeader" && l.status === "Pending")
+      setLoading(true);
+      const [empLeaveRes, tlLeaveRes, empWfhRes, tlWfhRes] = await Promise.all([
+        axios.get(`${API_URL}/api/manager/pending-approvals`),
+        axios.get(`${API_URL}/api/tl-leave/requests/${currentUser.id}`),
+        axios.get(`${API_URL}/api/manager/wfh/pending-employees/${currentUser.id}`),
+        axios.get(`${API_URL}/api/tl-wfh/pending/${currentUser.id}`)
+      ]);
+
+      const filteredLeaves = empLeaveRes.data.filter(l =>
+        l.role === "Employee" || (l.role === "TeamLeader" && l.status === "Pending")
       );
 
-      setLeaves(filtered);
+      setLeaves(filteredLeaves);
+      setTlLeaves(tlLeaveRes.data);
+      setEmpWfh(empWfhRes.data);
+      setTlWfh(tlWfhRes.data);
     } catch (err) {
-      console.error("Error fetching employee leaves:", err);
-    }
-  }, []);
-
-  // ✅ FETCH TEAM LEADER LEAVES
-  const fetchTeamLeaderLeaves = useCallback(async () => {
-    try {
-      // ✅ FIX: Replaced broken env variable with API_URL
-      const res = await axios.get(
-        `${API_URL}/api/tl-leave/requests/${currentUser.id}`
-      );
-
-      setTlLeaves(res.data);
-    } catch (err) {
-      console.error("Error fetching TL leaves:", err);
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
     }
   }, [currentUser.id]);
 
   useEffect(() => {
-    fetchEmployeeLeaves();
-    fetchTeamLeaderLeaves();
-  }, [fetchEmployeeLeaves, fetchTeamLeaderLeaves]);
+    fetchAllData();
+  }, [fetchAllData]);
 
-  // ✅ APPROVE EMPLOYEE LEAVE
-  const handleApproveEmployee = async (leaveId) => {
+  const handleAction = async (id, type, status) => {
     try {
       setLoading(true);
-      // ✅ FIX: Replaced broken env variable with API_URL
-      await axios.put(`${API_URL}/api/manager/approve-leave/${leaveId}`, {
-        status: "Approved"
-      });
-      alert("Leave Approved ✅");
-      fetchEmployeeLeaves();
+      if (type === 'emp_leave') {
+        await axios.put(`${API_URL}/api/manager/approve-leave/${id}`, { status });
+      } else if (type === 'tl_leave') {
+        await axios.put(`${API_URL}/api/tl-leave/approve/${id}`, { status });
+      } else if (type === 'emp_wfh') {
+        await axios.put(`${API_URL}/api/manager/wfh/approve/${id}`, { status });
+      } else if (type === 'tl_wfh') {
+        await axios.put(`${API_URL}/api/tl-wfh/approve/${id}`, { status });
+      }
+      alert(`Request ${status} ✅`);
+      fetchAllData();
     } catch (err) {
-      alert("Failed to approve leave");
+      alert("Failed to process request");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ REJECT EMPLOYEE LEAVE
-  const handleRejectEmployee = async (leaveId) => {
-    if (!rejectReason) {
-      alert("Please enter a reason for rejection");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // ✅ FIX: Replaced broken env variable with API_URL
-      await axios.put(`${API_URL}/api/manager/approve-leave/${leaveId}`, {
-        status: "Rejected",
-        reason: rejectReason
-      });
-      alert("Leave Rejected ❌");
-      setRejectReason("");
-      setRejectIndex(null);
-      fetchEmployeeLeaves();
-    } catch (err) {
-      alert("Failed to reject leave");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ APPROVE/DENY TEAM LEADER LEAVE
-  const handleApproveTLLeave = async () => {
-    if (!approvalStatus) {
-      alert("Select Approve or Deny");
-      return;
-    }
-
-    if (approvalStatus === "Denied" && !managerReason) {
-      alert("Please provide a reason for denial");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // ✅ FIX: Replaced broken env variable with API_URL
-      const response = await axios.put(
-        `${API_URL}/api/tl-leave/approve/${selectedLeave.id}`,
-        {
-          status: approvalStatus,
-          manager_reason: managerReason || null
-        }
-      );
-
-      alert(`✅ Leave ${approvalStatus} successfully`);
-
-      setSelectedLeave(null);
-      setApprovalStatus("");
-      setManagerReason("");
-      fetchTeamLeaderLeaves();
-
-    } catch (error) {
-      console.error("Error updating leave:", error);
-      alert("Failed to update leave request");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openTLApprovalModal = (leave) => {
-    setSelectedLeave(leave);
-    setApprovalStatus("");
-    setManagerReason("");
-  };
+  const getTabStyle = (tabName) => ({
+    padding: "10px 20px",
+    backgroundColor: activeTab === tabName ? "#007bff" : "#f0f0f0",
+    color: activeTab === tabName ? "white" : "black",
+    border: "none",
+    cursor: "pointer",
+    marginRight: "5px",
+    borderRadius: "5px 5px 0 0"
+  });
 
   return (
     <div className="page-container">
-      <h2>Leave Approvals</h2>
+      <h2>Manager Approvals</h2>
 
-      {/* TABS */}
-      <div style={{ marginBottom: "20px", borderBottom: "2px solid #ddd" }}>
-        <button
-          onClick={() => setActiveTab("employee")}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: activeTab === "employee" ? "#007bff" : "#f0f0f0",
-            color: activeTab === "employee" ? "white" : "black",
-            border: "none",
-            cursor: "pointer",
-            marginRight: "10px"
-          }}
-        >
-          Employee Leaves ({leaves.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("teamleader")}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: activeTab === "teamleader" ? "#007bff" : "#f0f0f0",
-            color: activeTab === "teamleader" ? "white" : "black",
-            border: "none",
-            cursor: "pointer"
-          }}
-        >
-          Team Leader Leaves ({tlLeaves.length})
-        </button>
+      <div style={{ marginBottom: "20px", borderBottom: "2px solid #ddd", display: "flex" }}>
+        <button onClick={() => setActiveTab("employee_leave")} style={getTabStyle("employee_leave")}>Emp Leaves ({leaves.length})</button>
+        <button onClick={() => setActiveTab("tl_leave")} style={getTabStyle("tl_leave")}>TL Leaves ({tlLeaves.length})</button>
+        <button onClick={() => setActiveTab("employee_wfh")} style={getTabStyle("employee_wfh")}>Emp WFH ({empWfh.length})</button>
+        <button onClick={() => setActiveTab("tl_wfh")} style={getTabStyle("tl_wfh")}>TL WFH ({tlWfh.length})</button>
       </div>
 
-      {/* EMPLOYEE LEAVES TAB */}
-      {activeTab === "employee" && (
-        <table className="approval-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Dates</th>
-              <th>Days</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Action</th>
+      <table className="approval-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            {(activeTab === "employee_leave" || activeTab === "tl_leave") && <th>Type</th>}
+            <th>Dates</th>
+            <th>Days</th>
+            <th>Reason</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* EMP LEAVES */}
+          {activeTab === "employee_leave" && leaves.map((l) => (
+            <tr key={l.id}>
+              <td>{l.name}</td>
+              <td>{l.leave_type}</td>
+              <td>{new Date(l.from_date).toLocaleDateString()} → {new Date(l.to_date).toLocaleDateString()}</td>
+              <td>{l.days}</td>
+              <td>{l.reason}</td>
+              <td>
+                <button className="approve-btn" onClick={() => handleAction(l.id, 'emp_leave', 'Approved')} disabled={loading}>Approve</button>
+                <button className="reject-btn" onClick={() => handleAction(l.id, 'emp_leave', 'Rejected')} disabled={loading}>Reject</button>
+              </td>
             </tr>
-          </thead>
+          ))}
 
-          <tbody>
-            {leaves.length === 0 ? (
-              <tr>
-                <td colSpan="7" style={{ textAlign: "center" }}>No Pending Requests</td>
-              </tr>
-            ) : (
-              leaves.map((l, i) => (
-                <tr key={l.id}>
-                  <td>{l.name}</td>
-                  <td>{l.role}</td>
-                  <td>
-                    {new Date(l.from_date).toLocaleDateString()} → {new Date(l.to_date).toLocaleDateString()}
-                  </td>
-                  <td>{l.days}</td>
-                  <td>{l.reason}</td>
-                  {/* Logic check: If status is TL Approved, it means TL already said yes */}
-                  <td>
-                    {l.status === 'TL Approved' ? (
-                      <span style={{ color: "#007bff", fontWeight: "bold" }}>TL Approved</span>
-                    ) : (
-                      l.manager_status || "Pending"
-                    )}
-                  </td>
-
-                  <td>
-                    {/* Allow action if it's Pending or TL Approved (needing final manager sign-off) */}
-                    {(l.manager_status === "Pending" || !l.manager_status || l.status === "TL Approved") && (
-                      <div className="action-buttons">
-                        <button 
-                          className="approve-btn" 
-                          onClick={() => handleApproveEmployee(l.id)}
-                          disabled={loading}
-                        >
-                          Approve
-                        </button>
-
-                        {rejectIndex === i ? (
-                          <div className="reject-confirm">
-                            <input
-                              placeholder="Rejection Reason"
-                              value={rejectReason}
-                              onChange={(e) => setRejectReason(e.target.value)}
-                              autoFocus
-                            />
-                            <button 
-                              className="confirm-btn" 
-                              onClick={() => handleRejectEmployee(l.id)}
-                              disabled={loading}
-                            >
-                              Confirm
-                            </button>
-                            <button 
-                              className="cancel-btn" 
-                              onClick={() => setRejectIndex(null)}
-                              disabled={loading}
-                            >
-                              X
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            className="reject-btn" 
-                            onClick={() => setRejectIndex(i)}
-                            disabled={loading}
-                          >
-                            Reject
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
-
-      {/* TEAM LEADER LEAVES TAB */}
-      {activeTab === "teamleader" && (
-        <table className="approval-table">
-          <thead>
-            <tr>
-              <th>Team Leader Name</th>
-              <th>Leave Type</th>
-              <th>From Date</th>
-              <th>To Date</th>
-              <th>Days</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
+          {/* TL LEAVES */}
+          {activeTab === "tl_leave" && tlLeaves.map((l) => (
+            <tr key={l.id}>
+              <td>{l.tl_name}</td>
+              <td>{l.leave_type}</td>
+              <td>{new Date(l.from_date).toLocaleDateString()} → {new Date(l.to_date).toLocaleDateString()}</td>
+              <td>{l.days}</td>
+              <td>{l.reason}</td>
+              <td>
+                <button className="approve-btn" onClick={() => handleAction(l.id, 'tl_leave', 'Approved')} disabled={loading}>Approve</button>
+                <button className="reject-btn" onClick={() => handleAction(l.id, 'tl_leave', 'Denied')} disabled={loading}>Reject</button>
+              </td>
             </tr>
-          </thead>
+          ))}
 
-          <tbody>
-            {tlLeaves.length > 0 ? (
-              tlLeaves.map((leave, index) => (
-                <tr key={index}>
-                  <td>{leave.tl_name}</td>
-                  <td>
-                    {leave.leave_type} {leave.session && `(${leave.session})`}
-                  </td>
-                  <td>{new Date(leave.from_date).toLocaleDateString()}</td>
-                  <td>{new Date(leave.to_date).toLocaleDateString()}</td>
-                  <td>{leave.days}</td>
-                  <td>{leave.reason}</td>
-                  <td>
-                    <span
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: "5px",
-                        backgroundColor:
-                          leave.status === "Pending"
-                            ? "#fff3cd"
-                            : leave.status === "Approved"
-                            ? "#d4edda"
-                            : "#f8d7da",
-                        color:
-                          leave.status === "Pending"
-                            ? "#856404"
-                            : leave.status === "Approved"
-                            ? "#155724"
-                            : "#721c24"
-                      }}
-                    >
-                      {leave.status === "Denied" ? "Rejected" : leave.status}
-                    </span>
-                  </td>
-                  <td>
-                    {leave.status === "Pending" ? (
-                      <button
-                        onClick={() => openTLApprovalModal(leave)}
-                        disabled={loading}
-                      >
-                        Review
-                      </button>
-                    ) : (
-                      <span style={{ color: "#999" }}>Done</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" style={{ textAlign: "center", color: "#999" }}>
-                  No pending leave requests
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
+          {/* EMP WFH */}
+          {activeTab === "employee_wfh" && empWfh.map((w) => (
+            <tr key={w.id}>
+              <td>{w.employee_name} <br/><small>(TL Approved)</small></td>
+              <td>{new Date(w.from_date).toLocaleDateString()} → {new Date(w.to_date).toLocaleDateString()}</td>
+              <td>{w.days}</td>
+              <td>{w.reason}</td>
+              <td>
+                <button className="approve-btn" onClick={() => handleAction(w.id, 'emp_wfh', 'Approved')} disabled={loading}>Approve</button>
+                <button className="reject-btn" onClick={() => handleAction(w.id, 'emp_wfh', 'Denied')} disabled={loading}>Reject</button>
+              </td>
+            </tr>
+          ))}
 
-      {/* TL APPROVAL MODAL */}
-      {selectedLeave && (
-        <div className="modal" style={{ display: "flex" }}>
-          <div className="modal-box" style={{ width: "500px" }}>
-            <h3>Review Leave Request</h3>
+          {/* TL WFH */}
+          {activeTab === "tl_wfh" && tlWfh.map((w) => (
+            <tr key={w.id}>
+              <td>{w.tl_name}</td>
+              <td>{new Date(w.from_date).toLocaleDateString()} → {new Date(w.to_date).toLocaleDateString()}</td>
+              <td>{w.days}</td>
+              <td>{w.reason}</td>
+              <td>
+                <button className="approve-btn" onClick={() => handleAction(w.id, 'tl_wfh', 'Approved')} disabled={loading}>Approve</button>
+                <button className="reject-btn" onClick={() => handleAction(w.id, 'tl_wfh', 'Denied')} disabled={loading}>Reject</button>
+              </td>
+            </tr>
+          ))}
 
-            <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#f9f9f9", borderRadius: "5px" }}>
-              <p><strong>Team Leader:</strong> {selectedLeave.tl_name}</p>
-              <p><strong>Leave Type:</strong> {selectedLeave.leave_type} {selectedLeave.session && `(${selectedLeave.session})`}</p>
-              <p><strong>From:</strong> {new Date(selectedLeave.from_date).toLocaleDateString()}</p>
-              <p><strong>To:</strong> {new Date(selectedLeave.to_date).toLocaleDateString()}</p>
-              <p><strong>Days:</strong> {selectedLeave.days}</p>
-              <p><strong>Reason:</strong> {selectedLeave.reason}</p>
-            </div>
-
-            <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "10px" }}>
-                <strong>Decision:</strong>
-              </label>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <label>
-                  <input
-                    type="radio"
-                    value="Approved"
-                    checked={approvalStatus === "Approved"}
-                    onChange={(e) => {
-                      setApprovalStatus(e.target.value);
-                      setManagerReason("");
-                    }}
-                    disabled={loading}
-                  />
-                  ✅ Approve
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    value="Denied"
-                    checked={approvalStatus === "Denied"}
-                    onChange={(e) => setApprovalStatus(e.target.value)}
-                    disabled={loading}
-                  />
-                  ❌ Deny
-                </label>
-              </div>
-            </div>
-
-            {approvalStatus === "Denied" && (
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px" }}>
-                  <strong>Reason for Denial:</strong>
-                </label>
-                <textarea
-                  placeholder="Enter reason for denial"
-                  value={managerReason}
-                  onChange={(e) => setManagerReason(e.target.value)}
-                  disabled={loading}
-                  style={{
-                    width: "100%",
-                    height: "80px",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "5px",
-                    fontFamily: "Arial"
-                  }}
-                />
-              </div>
-            )}
-
-            <div className="modal-actions">
-              <button
-                onClick={() => setSelectedLeave(null)}
-                disabled={loading}
-                style={{ backgroundColor: "#6c757d" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApproveTLLeave}
-                disabled={loading || !approvalStatus}
-                style={{
-                  backgroundColor: approvalStatus === "Denied" ? "#dc3545" : "#28a745"
-                }}
-              >
-                {loading
-                  ? "Processing..."
-                  : approvalStatus === "Denied"
-                  ? "Deny"
-                  : "Approve"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          {/* EMPTY STATES */}
+          {activeTab === "employee_leave" && leaves.length === 0 && <tr><td colSpan="6" style={{textAlign:"center"}}>No pending Employee leaves</td></tr>}
+          {activeTab === "tl_leave" && tlLeaves.length === 0 && <tr><td colSpan="6" style={{textAlign:"center"}}>No pending TL leaves</td></tr>}
+          {activeTab === "employee_wfh" && empWfh.length === 0 && <tr><td colSpan="5" style={{textAlign:"center"}}>No pending Employee WFH</td></tr>}
+          {activeTab === "tl_wfh" && tlWfh.length === 0 && <tr><td colSpan="5" style={{textAlign:"center"}}>No pending TL WFH</td></tr>}
+        </tbody>
+      </table>
     </div>
   );
 };

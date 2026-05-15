@@ -1,0 +1,21 @@
+@import "./Login.css";
+
+.signup-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0b1120,
+      #1e1b4b,
+      #111827
+    );
+
+}

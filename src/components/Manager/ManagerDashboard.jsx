@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./ManagerDashboard.css";
 
-// ✅ Fixed Logo Path to match assets folder
-import logo from "./assets/logo.jpeg"; 
+import logo from "./assets/logo.jpeg";
 
-// ✅ Component Imports
 import DashboardHome from "./DashboardHome";
 import Employees from "./Employees";
 import Projects from "./Projects";
@@ -28,11 +26,14 @@ import {
   FaSignOutAlt
 } from "react-icons/fa";
 
+// ✅ FIXED: Safe fallback so photo URL never becomes "undefined/..."
+const BASE_URL = process.env.REACT_APP_API_URL || "https://hrms-api.hrapta.com";
+
 const ManagerDashboard = ({ onLogout }) => {
   const [activePage, setActivePage] = useState("dashboard");
 
   const [user, setUser] = useState({
-    id: "", 
+    id: "",
     name: "",
     photo: ""
   });
@@ -43,10 +44,9 @@ const ManagerDashboard = ({ onLogout }) => {
         const storedUser = JSON.parse(localStorage.getItem("user"));
         if (storedUser) {
           setUser({
-            id: storedUser.id || "", 
+            id: storedUser.id || "",
             name: storedUser.name || "Manager",
-            // If photo path is relative from backend, ensure it has the full URL
-            photo: storedUser.photo ? `${process.env.REACT_APP_API_URL}${storedUser.photo}` : ""
+            photo: storedUser.photo ? `${BASE_URL}${storedUser.photo}` : ""
           });
         }
       } catch (err) {
@@ -55,7 +55,6 @@ const ManagerDashboard = ({ onLogout }) => {
     };
 
     loadUser();
-    // Listen for custom events if profile is updated elsewhere
     window.addEventListener("userUpdated", loadUser);
 
     return () => {
@@ -64,42 +63,29 @@ const ManagerDashboard = ({ onLogout }) => {
   }, []);
 
   const renderPage = () => {
-    // ✅ These props ensure all child components have the correct ID
-    // managerId is used for team/projects, userId is used for personal profile/leave
     const sharedProps = { managerId: user.id, userId: user.id };
 
     switch (activePage) {
       case "dashboard":
-        // DashboardHome will now receive managerId to fetch the Pie Chart & Card data
         return <DashboardHome {...sharedProps} />;
-
       case "employees":
-        return <Employees {...sharedProps} />; 
-
+        return <Employees {...sharedProps} />;
       case "projects":
         return <Projects {...sharedProps} />;
-
       case "applyLeave":
         return <ApplyLeave {...sharedProps} />;
-
       case "leaveRequests":
         return <LeaveApprovals {...sharedProps} />;
-
       case "timesheets":
         return <TimeSheets {...sharedProps} />;
-
       case "resignation":
         return <Resignation {...sharedProps} />;
-
       case "calendar":
         return <Calendar />;
-
       case "profile":
         return <Profile userId={user.id} />;
-
       case "changePassword":
         return <ChangePassword userId={user.id} />;
-
       default:
         return <DashboardHome {...sharedProps} />;
     }

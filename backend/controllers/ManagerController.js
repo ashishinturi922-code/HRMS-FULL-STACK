@@ -1,4 +1,5 @@
 const db = require('../db');
+const bcrypt = require('bcrypt');
 
 class ManagerController {
 
@@ -18,13 +19,8 @@ class ManagerController {
             const managerEmployeeId = userRows[0].employee_id;
 
             const [totalEmpRows] = await db.execute(
-                `SELECT COUNT(*) as total FROM users 
-                 WHERE role = 'Employee' 
-                    OR UPPER(TRIM(REPLACE(role, ' ', ''))) = 'TEAMLEADER'
-                    OR UPPER(TRIM(role)) = 'TEAM LEADER'
-                    OR role = 'TeamLeader'
-                    OR role = 'Team Leader'
-                    OR role = 'Manager'`
+                // ✅ FIX: Include Admin in total employee count
+                `SELECT COUNT(*) as total FROM users`
             );
             const totalEmployees = totalEmpRows[0]?.total || 0;
 
@@ -43,20 +39,24 @@ class ManagerController {
 
             let leaveCount = 0;
             try {
+                // ✅ FIX: UNION both tables so Team Leaders are counted too
                 const [leaveRows] = await db.execute(
-                    `SELECT COUNT(DISTINCT lr.user_id) as count 
-                     FROM leave_requests lr
-                     JOIN users u ON lr.user_id = u.id
-                     WHERE u.department = ? 
-                     AND (u.role = 'Employee'
-                          OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                          OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                          OR u.role = 'TeamLeader'
-                          OR u.role = 'Team Leader'
-                          OR u.role = 'Manager')
-                     AND lr.status = 'Approved'
-                     AND CURRENT_DATE BETWEEN lr.from_date AND lr.to_date`,
-                    [mgrDept]
+                    `SELECT COUNT(*) as count FROM (
+                        SELECT DISTINCT lr.user_id AS uid
+                        FROM leave_requests lr
+                        JOIN users u ON lr.user_id = u.id
+                        WHERE u.department = ?
+                        AND lr.status = 'Approved'
+                        AND CURRENT_DATE BETWEEN DATE(lr.from_date) AND DATE(lr.to_date)
+                        UNION
+                        SELECT DISTINCT tl.tl_user_id AS uid
+                        FROM tl_leave_requests tl
+                        JOIN users u ON tl.tl_user_id = u.id
+                        WHERE u.department = ?
+                        AND tl.status = 'Approved'
+                        AND CURRENT_DATE BETWEEN DATE(tl.from_date) AND DATE(tl.to_date)
+                    ) AS combined`,
+                    [mgrDept, mgrDept]
                 );
                 leaveCount = leaveRows[0]?.count || 0;
             } catch (err) {
@@ -64,8 +64,8 @@ class ManagerController {
                 leaveCount = 0;
             }
 
-            const presentPeople = totalDeptEmployees - leaveCount;
-            const finalPresent = presentPeople < 0 ? 0 : presentPeople;
+            // ✅ FIX: Use totalEmployees (org-wide) as base so pie matches stat card
+            const finalPresent = Math.max(0, totalEmployees - leaveCount);
 
             let activeProjects = 0;
             let completedProjects = 0;
@@ -691,22 +691,129 @@ class ManagerController {
 
     async updateProfile(req, res) {
         try {
-            const { userId, name, phone, personalEmail, officialEmail, address, gender, dob, altPhone, bloodGroup, photo } = req.body;
-            const sql = `UPDATE users SET name=?, phone=?, personal_email=?, official_email=?, address=?, gender=?, dob=?, alt_phone=?, blood_group=?, profile_photo=? WHERE id=?`;
-            await db.execute(sql, [name, phone, personalEmail, officialEmail, address, gender, dob || null, altPhone, bloodGroup, photo, userId]);
-            res.json({ success: true, message: "Profile updated successfully" });
+            const {
+                userId, name, phone, personalEmail, officialEmail,
+                address, gender, dob, altPhone, bloodGroup, photo
+            } = req.body;
+
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is required' });
+            }
+
+            // ✅ FIX: If photo is a base64 string, save it to disk and store the path.
+            // Storing raw base64 in the DB column causes a 500 when the string
+            // exceeds MySQL's max_allowed_packet or the column length.
+            let photoPath = null;
+            if (photo && photo.startsWith('data:image')) {
+                try {
+                    const fs = require('fs');
+                    const path = require('path');
+                    const base64Data = photo.replace(/^data:image\/\w+;base64,/, '');
+                    const ext = photo.split(';')[0].split('/')[1] || 'jpg';
+                    const filename = `profile_${userId}_${Date.now()}.${ext}`;
+                    const uploadDir = path.join(__dirname, '..', 'uploads', 'profiles');
+                    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+                    fs.writeFileSync(path.join(uploadDir, filename), base64Data, 'base64');
+                    photoPath = `/uploads/profiles/${filename}`;
+                } catch (photoErr) {
+                    console.error('Photo save error (non-fatal):', photoErr.message);
+                    // Don't fail the whole profile update just because photo failed
+                    photoPath = null;
+                }
+            }
+
+            // Build query dynamically so we only update photo when one is provided
+            if (photoPath) {
+                const sql = `UPDATE users SET name=?, phone=?, personal_email=?, official_email=?, 
+                             address=?, gender=?, dob=?, alt_phone=?, blood_group=?, profile_photo=? 
+                             WHERE id=?`;
+                await db.execute(sql, [
+                    name || null, phone || null, personalEmail || null, officialEmail || null,
+                    address || null, gender || null, dob || null, altPhone || null,
+                    bloodGroup || null, photoPath, userId
+                ]);
+            } else {
+                const sql = `UPDATE users SET name=?, phone=?, personal_email=?, official_email=?, 
+                             address=?, gender=?, dob=?, alt_phone=?, blood_group=? 
+                             WHERE id=?`;
+                await db.execute(sql, [
+                    name || null, phone || null, personalEmail || null, officialEmail || null,
+                    address || null, gender || null, dob || null, altPhone || null,
+                    bloodGroup || null, userId
+                ]);
+            }
+
+            res.json({ success: true, message: 'Profile updated successfully' });
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            console.error('Manager updateProfile Error:', error);
+            res.status(500).json({ error: error.message || 'Failed to update profile' });
         }
     }
 
     async updatePassword(req, res) {
         try {
-            const { userId, newPassword } = req.body;
-            await db.execute('UPDATE users SET password = ? WHERE id = ?', [newPassword, userId]);
-            res.json({ success: true, message: "Password updated successfully" });
+            const { userId, currentPassword, newPassword } = req.body;
+            if (!userId || !newPassword) {
+                return res.status(400).json({ error: 'User ID and new password are required' });
+            }
+            // ✅ FIX: Verify current password then hash the new one before saving
+            const [rows] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+            if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+            if (currentPassword) {
+                const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
+                if (!isMatch) return res.status(401).json({ error: 'Current password is incorrect' });
+            }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+            res.json({ success: true, message: 'Password updated successfully' });
         } catch (error) {
-            res.status(500).json({ error: "Failed to update password" });
+            console.error('Update Password Error:', error);
+            res.status(500).json({ error: 'Failed to update password' });
+        }
+    }
+
+    // ✅ FIX: Upload profile photo for Manager
+    async uploadPhoto(req, res) {
+        try {
+            const { id } = req.params;
+            if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+            const photoUrl = `/uploads/profiles/${req.file.filename}`;
+            await db.execute('UPDATE users SET profile_photo = ? WHERE id = ?', [photoUrl, id]);
+
+            res.json({ success: true, photoUrl });
+        } catch (error) {
+            console.error("Manager Upload Photo Error:", error);
+            res.status(500).json({ error: "Failed to upload photo" });
+        }
+    }
+
+    // ✅ FIX: Upload document for Manager
+    async uploadDoc(req, res) {
+        try {
+            if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+            const { userId, type } = req.body;
+
+            // ✅ FIX: Map frontend short names ('aadhar','pan','certificate') to DB column names
+            const typeMap = {
+                aadhar:           'aadhar_path',
+                pan:              'pan_path',
+                certificate:      'certificate_path',
+                aadhar_path:      'aadhar_path',
+                pan_path:         'pan_path',
+                certificate_path: 'certificate_path'
+            };
+            const column = typeMap[type];
+            if (!column) return res.status(400).json({ error: 'Invalid document type' });
+
+            const docUrl = `/uploads/documents/${req.file.filename}`;
+            await db.execute(`UPDATE users SET ${column} = ? WHERE id = ?`, [docUrl, userId]);
+
+            res.json({ success: true, docUrl });
+        } catch (error) {
+            console.error('Manager Upload Doc Error:', error);
+            res.status(500).json({ error: 'Failed to upload document' });
         }
     }
 
@@ -733,32 +840,31 @@ class ManagerController {
 
             const department = mgrRows[0].department;
 
+            // ✅ FIX: UNION both tables so Team Leaders (stored in tl_leave_requests)
+            //         appear alongside Employees/Managers (stored in leave_requests).
             const sql = `
-                SELECT 
-                    u.id, 
-                    u.name, 
-                    u.employee_id,
-                    u.department,
-                    u.role,
-                    l.reason as leaveReason,
-                    l.status
+                SELECT u.id, u.name, u.employee_id, u.department, u.role,
+                       l.leave_type, l.status
                 FROM leave_requests l
                 JOIN users u ON l.user_id = u.id
                 WHERE u.department = ?
-                AND (u.role = 'Employee'
-                     OR UPPER(TRIM(REPLACE(u.role, ' ', ''))) = 'TEAMLEADER'
-                     OR UPPER(TRIM(u.role)) = 'TEAM LEADER'
-                     OR u.role = 'TeamLeader'
-                     OR u.role = 'Team Leader'
-                     OR u.role = 'Manager')
-                AND l.status = 'Approved' 
+                AND l.status = 'Approved'
                 AND ? BETWEEN DATE(l.from_date) AND DATE(l.to_date)
-                ORDER BY u.name ASC
+
+                UNION
+
+                SELECT u.id, u.name, u.employee_id, u.department, u.role,
+                       tl.leave_type, tl.status
+                FROM tl_leave_requests tl
+                JOIN users u ON tl.tl_user_id = u.id
+                WHERE u.department = ?
+                AND tl.status = 'Approved'
+                AND ? BETWEEN DATE(tl.from_date) AND DATE(tl.to_date)
+
+                ORDER BY name ASC
             `;
             
-            const [rows] = await db.execute(sql, [department, date]);
-            
-            console.log("Manager leave employees, team leaders, and managers fetched:", rows);
+            const [rows] = await db.execute(sql, [department, date, department, date]);
             
             res.json({ 
                 employees: Array.isArray(rows) ? rows : []
@@ -766,6 +872,173 @@ class ManagerController {
         } catch (error) {
             console.error("Get Leave Employees Error:", error);
             res.status(500).json({ error: "Failed to fetch leave employees", employees: [] });
+        }
+    }
+
+    // ✅ FIX: Delete manager's own pending leave request
+    async deleteLeave(req, res) {
+        try {
+            const { leaveId } = req.params;
+            if (!leaveId) return res.status(400).json({ error: 'Leave ID is required' });
+
+            const [rows] = await db.execute(
+                'SELECT status FROM leave_requests WHERE id = ?', [leaveId]
+            );
+            if (!rows.length) return res.status(404).json({ error: 'Leave request not found' });
+            if (rows[0].status !== 'Pending') {
+                return res.status(400).json({ error: `Cannot delete a ${rows[0].status} leave` });
+            }
+
+            await db.execute('DELETE FROM leave_requests WHERE id = ?', [leaveId]);
+            res.json({ success: true, message: 'Leave deleted successfully' });
+        } catch (error) {
+            console.error('Delete Leave Error:', error);
+            res.status(500).json({ error: 'Failed to delete leave request' });
+        }
+    }
+
+    // ✅ FIX: Edit/update manager's own pending leave request
+    async updateLeave(req, res) {
+        try {
+            const { leaveId } = req.params;
+            const { leave_type, from_date, to_date, reason, days } = req.body;
+
+            if (!leaveId) return res.status(400).json({ error: 'Leave ID is required' });
+
+            const [rows] = await db.execute(
+                'SELECT status FROM leave_requests WHERE id = ?', [leaveId]
+            );
+            if (!rows.length) return res.status(404).json({ error: 'Leave request not found' });
+            if (rows[0].status !== 'Pending') {
+                return res.status(400).json({ error: `Cannot edit a ${rows[0].status} leave` });
+            }
+
+            await db.execute(
+                `UPDATE leave_requests 
+                 SET leave_type=?, from_date=?, to_date=?, reason=?, days=? 
+                 WHERE id=?`,
+                [leave_type, from_date, to_date, reason || null, days, leaveId]
+            );
+            res.json({ success: true, message: 'Leave updated successfully' });
+        } catch (error) {
+            console.error('Update Leave Error:', error);
+            res.status(500).json({ error: 'Failed to update leave request' });
+        }
+    }
+
+    // Fix #7 — Manager can view resignations in their department
+    async getTeamResignations(req, res) {
+        try {
+            const { managerId } = req.query;
+            if (!managerId) return res.status(400).json({ error: 'managerId query param required' });
+
+            const [mgrRows] = await db.execute('SELECT department FROM users WHERE id = ?', [managerId]);
+            if (!mgrRows.length) return res.status(404).json({ error: 'Manager not found' });
+            const dept = mgrRows[0].department;
+
+            const [rows] = await db.execute(`
+                SELECT r.*, u.name, u.employee_id, u.role
+                FROM resignations r
+                JOIN users u ON r.user_id = u.id
+                WHERE u.department = ?
+                ORDER BY r.id DESC
+            `, [dept]);
+            res.json(Array.isArray(rows) ? rows : []);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch resignations' });
+        }
+    }
+
+    // Fix #7 — Remove employee from a project
+    async removeEmployeeFromProject(req, res) {
+        try {
+            const { projectId, employeeId } = req.params;
+            const [projectRows] = await db.execute('SELECT employeeIds FROM projects WHERE id = ?', [projectId]);
+            if (!projectRows.length) return res.status(404).json({ error: 'Project not found' });
+
+            const current = (projectRows[0].employeeIds || '').split(',').map(e => e.trim()).filter(Boolean);
+            const updated = current.filter(e => e !== String(employeeId)).join(',');
+            await db.execute('UPDATE projects SET employeeIds = ? WHERE id = ?', [updated, projectId]);
+            res.json({ success: true, message: 'Employee removed from project' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to remove employee' });
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    // 🆕 MANAGER WFH REQUEST WORKFLOW
+    // NOTE: WFH is stored in manager_wfh_requests (separate table).
+    //       getDashboardStats intentionally does NOT query this table
+    //       so WFH days never appear in the "On Leave" count.
+    // ══════════════════════════════════════════════
+
+    calculateWorkingDays(fromDate, toDate) {
+        let count = 0;
+        let current = new Date(fromDate);
+        const endDate = new Date(toDate);
+        while (current <= endDate) {
+            const day = current.getDay();
+            if (day !== 0 && day !== 6) count++;
+            current.setDate(current.getDate() + 1);
+        }
+        return count > 0 ? count : 0;
+    }
+
+    // ✅ APPLY WFH
+    async applyWFH(req, res) {
+        try {
+            const { user_id, from_date, to_date, days, reason } = req.body;
+            if (!user_id || !from_date || !to_date || !reason) {
+                return res.status(400).json({ error: "Missing required fields" });
+            }
+
+            const fromDay = new Date(from_date).getDay();
+            const toDay   = new Date(to_date).getDay();
+            if (fromDay === 0 || fromDay === 6) return res.status(400).json({ error: "Cannot apply WFH starting on a weekend" });
+            if (toDay   === 0 || toDay   === 6) return res.status(400).json({ error: "Cannot apply WFH ending on a weekend"   });
+
+            const calculatedDays = this.calculateWorkingDays(from_date, to_date);
+            if (calculatedDays === 0) return res.status(400).json({ error: "No working days in selected range" });
+
+            await db.execute(
+                `INSERT INTO manager_wfh_requests (user_id, from_date, to_date, days, reason, status)
+                 VALUES (?, ?, ?, ?, ?, 'Pending')`,
+                [user_id, from_date, to_date, calculatedDays, reason]
+            );
+
+            res.json({ success: true, message: `✅ WFH request submitted (${calculatedDays} days)` });
+        } catch (error) {
+            console.error("❌ Manager Apply WFH Error:", error);
+            res.status(500).json({ error: "Failed to apply WFH", details: error.message });
+        }
+    }
+
+    // ✅ GET MY WFH REQUESTS
+    async getMyWFH(req, res) {
+        try {
+            const { managerId } = req.params;
+            const [rows] = await db.execute(
+                `SELECT * FROM manager_wfh_requests WHERE user_id = ? ORDER BY created_at DESC`,
+                [managerId]
+            );
+            res.json(rows || []);
+        } catch (error) {
+            res.status(500).json({ error: "Failed to fetch WFH requests" });
+        }
+    }
+
+    // ✅ DELETE WFH REQUEST
+    async deleteWFH(req, res) {
+        try {
+            const { wfhId } = req.params;
+            const [rows] = await db.execute('SELECT status FROM manager_wfh_requests WHERE id = ?', [wfhId]);
+            if (!rows.length) return res.status(404).json({ error: "WFH request not found" });
+            if (rows[0].status !== "Pending") return res.status(400).json({ error: "Can only delete pending requests" });
+
+            await db.execute('DELETE FROM manager_wfh_requests WHERE id = ?', [wfhId]);
+            res.json({ success: true, message: "✅ WFH request cancelled" });
+        } catch (error) {
+            res.status(500).json({ error: "Failed to delete WFH request" });
         }
     }
 }
